@@ -166,22 +166,24 @@ struct ContentView: View {
                         .disabled(isFetchingSOFA)
 
                         if let majors = sofaMajorDetails() {
-                            VStack(alignment: .leading, spacing: 12) {
+                            HStack(alignment: .top, spacing: 16) {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Latest Major (\(majors.latest?.productVersion ?? "n/a"))")
                                         .font(.headline)
                                     Text("Release Date: \(majors.latest?.releaseDate ?? "n/a")")
                                     Text("Actively Exploited CVEs: \(majors.latest?.activelyExploitedCount ?? 0)")
                                 }
-                                if let previous = majors.previous {
-                                    Divider().padding(.vertical, 4)
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Previous Major (\(previous.productVersion))")
-                                            .font(.headline)
-                                        Text("Release Date: \(previous.releaseDate)")
-                                        Text("Actively Exploited CVEs: \(previous.activelyExploitedCount)")
-                                    }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                                Divider()
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Previous Major (\(majors.previous?.productVersion ?? "n/a"))")
+                                        .font(.headline)
+                                    Text("Release Date: \(majors.previous?.releaseDate ?? "n/a")")
+                                    Text("Actively Exploited CVEs: \(majors.previous?.activelyExploitedCount ?? 0)")
                                 }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         } else if !sofaError.isEmpty {
                             Text("SOFA error: \(sofaError)")
@@ -201,23 +203,28 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Required Install By")
                         .font(.title3.weight(.semibold))
+                        .frame(maxWidth: .infinity, alignment: .center)
 
                     if isSOFAEnabled, let majors = sofaMajorDetails() {
-                        if let latest = majors.latest {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Latest Major \(latest.major) (\(latest.productVersion))")
-                                    .font(.headline)
-                                Text("Required Install By: \(latest.requiredInstallDate ?? "n/a")")
-                                Text("Nudge Launches On: \(latest.nudgeLaunchDate ?? "n/a")")
+                        HStack(alignment: .top, spacing: 16) {
+                            if let latest = majors.latest {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Latest Major \(latest.major) (\(latest.productVersion))")
+                                        .font(.headline)
+                                    Text("Required Install By: \(latest.requiredInstallDate ?? "n/a")")
+                                    Text("Nudge Launches On: \(latest.nudgeLaunchDate ?? "n/a")")
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                        }
-                        if let previous = majors.previous {
-                            Divider().padding(.vertical, 4)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Previous Major \(previous.major) (\(previous.productVersion))")
-                                    .font(.headline)
-                                Text("Required Install By: \(previous.requiredInstallDate ?? "n/a")")
-                                Text("Nudge Launches On: \(previous.nudgeLaunchDate ?? "n/a")")
+                            Divider()
+                            if let previous = majors.previous {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Previous Major \(previous.major) (\(previous.productVersion))")
+                                        .font(.headline)
+                                    Text("Required Install By: \(previous.requiredInstallDate ?? "n/a")")
+                                    Text("Nudge Launches On: \(previous.nudgeLaunchDate ?? "n/a")")
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
                     } else if let local = localRequirementSummary() {
@@ -499,9 +506,9 @@ struct ContentView: View {
     }
 
     private func isoLocalString(from date: Date) -> String {
-        let formatter = ISO8601DateFormatter()
+        let formatter = DateFormatter()
         formatter.timeZone = .current
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        formatter.dateFormat = "yyyy-MM-dd, HH:mm"
         return formatter.string(from: date)
     }
 
