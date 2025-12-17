@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 import UniformTypeIdentifiers
 
 struct ContentView: View {
@@ -21,6 +22,11 @@ struct ContentView: View {
     @State private var sofaFeed: SOFAFeed?
     @State private var sofaError: String = ""
     @State private var isFetchingSOFA: Bool = false
+    @State private var isShowingInfo: Bool = false
+    @State private var nudgeInstalled: Bool = false
+    @State private var nudgeVersion: String = "Unknown"
+    @State private var nudgePath: String = "Unknown"
+    @State private var nudgeDetectionLog: String = ""
     private var isSOFAEnabled: Bool {
         parsedConfig?.optionalFeatures?.utilizeSOFAFeed ?? true
     }
@@ -231,13 +237,28 @@ struct ContentView: View {
         .padding(24)
         .toolbar {
             ToolbarItemGroup(placement: .navigation) {
+
                 Button {
                     isShowingFileImporter = true
                 } label: {
                     Label("Select JSON", systemImage: "doc")
                 }
                 .buttonStyle(.bordered)
-                
+            }
+
+            ToolbarItemGroup(placement: .status) {
+                Button {
+                    isShowingInfo = true
+                } label: {
+                    if !nudgeInstalled {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(nudgeInstalled ? .accentColor : .yellow)
+                    }
+                    else {
+                        Image(systemName: "info.circle")
+                    }
+
+                }
             }
             
             ToolbarItemGroup(placement: .primaryAction) {
@@ -263,6 +284,42 @@ struct ContentView: View {
                 .disabled(isExecuting || commandText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
+        .sheet(isPresented: $isShowingInfo) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Nudge Status")
+                    .font(.title2.weight(.semibold))
+                Text("Installed: \(nudgeInstalled ? "Yes" : "No")")
+                Text("Version: \(nudgeInstalled ? nudgeVersion : "n/a")")
+                Text("Path: \(nudgeInstalled ? nudgePath : "n/a")")
+                HStack {
+                    Button {
+                        refreshNudgeInfo()
+                    } label: {
+                        Label("Refresh", systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.bordered)
+                    Spacer()
+                }
+                Divider().padding(.vertical, 4)
+                Text("Detection log")
+                    .font(.headline)
+                ScrollView {
+                    Text(nudgeDetectionLog.isEmpty ? "No log recorded." : nudgeDetectionLog)
+                        .font(.system(.footnote, design: .monospaced))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: 180)
+                Button("Close") {
+                    isShowingInfo = false
+                }
+                .padding(.top, 8)
+            }
+            .padding()
+            .frame(minWidth: 320)
+            .onAppear {
+                refreshNudgeInfo()
+            }
+        }
         .fileImporter(isPresented: $isShowingFileImporter,
                       allowedContentTypes: [.json],
                       allowsMultipleSelection: false) { result in
@@ -282,6 +339,7 @@ struct ContentView: View {
                 commandText = buildCommand(jsonPath: defaultPath)
                 parseConfig(at: URL(fileURLWithPath: defaultPath))
             }
+            refreshNudgeInfo()
         }
     }
 
@@ -330,6 +388,109 @@ struct ContentView: View {
             activityLog.append("\n[\(timestamp)] \(message)")
         }
         executionOutput = activityLog
+    }
+
+    private func refreshNudgeInfo() {
+        let result = detectNudge()
+        DispatchQueue.main.async {
+            nudgeInstalled = result.installed
+            nudgePath = result.path
+            nudgeVersion = result.version
+            nudgeDetectionLog = result.log
+            print(result.log)
+        }
+    }
+
+    private func detectNudge() -> (installed: Bool, path: String, version: String, log: String) {
+        var log: [String] = []
+        let searchPaths = [
+            "/Applications/Utilities/Nudge.app",
+            "/Applications/Nudge.app",
+            "/System/Applications/Utilities/Nudge.app"
+        ]
+
+        log.append("Searching for Nudge.app…")
+        if let bundleURL = findNudgeBundle(in: searchPaths, log: &log) {
+            let path = bundleURL.path
+            let version = readVersion(from: bundleURL, log: &log)
+            let joined = log.joined(separator: "\n")
+            return (true, path, version, joined.isEmpty ? "No log entries." : joined)
+        } else {
+            log.append("Nudge not found.")
+            let joined = log.joined(separator: "\n")
+            return (false, "Not found", "n/a", joined.isEmpty ? "No log entries." : joined)
+        }
+    }
+
+    private func findNudgeBundle(in paths: [String], log: inout [String]) -> URL? {
+        let fm = FileManager.default
+        for path in paths {
+            var isDir: ObjCBool = false
+            if fm.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue {
+                log.append("Found Nudge at \(path)")
+                return URL(fileURLWithPath: path, isDirectory: true)
+            }
+            // Also scan directory contents in case of case differences.
+            let dirURL = URL(fileURLWithPath: path).deletingLastPathComponent()
+            if fm.fileExists(atPath: dirURL.path, isDirectory: &isDir), isDir.boolValue {
+                if let contents = try? fm.contentsOfDirectory(atPath: dirURL.path) {
+                    if contents.contains(where: { $0.lowercased() == "nudge.app" }) {
+                        log.append("Found Nudge in directory scan at \(dirURL.path)/Nudge.app")
+                        return dirURL.appendingPathComponent("Nudge.app", isDirectory: true)
+                    } else {
+                        let list = contents.joined(separator: ", ")
+                        log.append("Directory scan at \(dirURL.path) contents: \(list)")
+                    }
+                }
+            }
+            log.append("No bundle at \(path)")
+        }
+        // Deep search within /Applications and /Applications/Utilities in case of unusual casing/locations.
+        let searchDirs = ["/Applications/Utilities", "/Applications"]
+        for dir in searchDirs {
+            if let url = deepSearch(appName: "nudge.app", in: dir, log: &log) {
+                return url
+            }
+        }
+        if let found = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.github.macadmins.Nudge") {
+            log.append("Found via bundle id: \(found.path)")
+            return found
+        }
+        log.append("Bundle id lookup failed.")
+        return nil
+    }
+
+    private func readVersion(from bundleURL: URL, log: inout [String]) -> String {
+        if let bundle = Bundle(url: bundleURL),
+           let version = bundle.infoDictionary?["CFBundleShortVersionString"] as? String {
+            log.append("Version from bundle: \(version)")
+            return version
+        }
+        let infoURL = bundleURL.appendingPathComponent("Contents/Info.plist")
+        if let dict = NSDictionary(contentsOf: infoURL),
+           let version = dict["CFBundleShortVersionString"] as? String {
+            log.append("Version from Info.plist: \(version)")
+            return version
+        }
+        log.append("Could not read version from \(infoURL.path)")
+        return "Unknown"
+    }
+
+    private func deepSearch(appName: String, in directory: String, log: inout [String]) -> URL? {
+        let fm = FileManager.default
+        let dirURL = URL(fileURLWithPath: directory, isDirectory: true)
+        guard let enumerator = fm.enumerator(at: dirURL, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles, .skipsPackageDescendants]) else {
+            log.append("Enumerator failed for \(directory)")
+            return nil
+        }
+        for case let url as URL in enumerator {
+            if url.lastPathComponent.lowercased() == appName {
+                log.append("Deep search found \(url.path)")
+                return url
+            }
+        }
+        log.append("Deep search in \(directory) found nothing.")
+        return nil
     }
 
     private func handleJSONSelection(url: URL) {
