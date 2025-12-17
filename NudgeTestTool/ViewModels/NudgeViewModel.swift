@@ -127,9 +127,9 @@ class NudgeViewModel: ObservableObject {
     }
 
     func handleJSONSelection(url: URL) {
-        var resolvedURL = url
+        let resolvedURL = url
         if resolvedURL.startAccessingSecurityScopedResource() {
-            defer { resolvedURL.stopAccessingSecurityScopedResource() }
+            do { resolvedURL.stopAccessingSecurityScopedResource() }
         }
 
         selectedJSONPath = resolvedURL.path
@@ -239,13 +239,13 @@ class NudgeViewModel: ObservableObject {
         let fm = FileManager.default
         for path in paths {
             var isDir: ObjCBool = false
-            if fm.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue {
+            if unsafe fm.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue {
                 log.append("Found Nudge at \(path)")
                 return URL(fileURLWithPath: path, isDirectory: true)
             }
             // Also scan directory contents in case of case differences.
             let dirURL = URL(fileURLWithPath: path).deletingLastPathComponent()
-            if fm.fileExists(atPath: dirURL.path, isDirectory: &isDir), isDir.boolValue {
+            if unsafe fm.fileExists(atPath: dirURL.path, isDirectory: &isDir), isDir.boolValue {
                 if let contents = try? fm.contentsOfDirectory(atPath: dirURL.path) {
                     if contents.contains(where: { $0.lowercased() == "nudge.app" }) {
                         log.append("Found Nudge in directory scan at \(dirURL.path)/Nudge.app")
