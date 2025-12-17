@@ -30,6 +30,8 @@ struct ContentView: View {
     @State private var latestNudgeVersion: String = "Unknown"
     @State private var isFetchingLatestNudge: Bool = false
     @State private var latestNudgeError: String = ""
+    @State private var latestSuiteURL: String = ""
+    @State private var latestSuiteError: String = ""
     private var isSOFAEnabled: Bool {
         parsedConfig?.optionalFeatures?.utilizeSOFAFeed ?? true
     }
@@ -305,6 +307,32 @@ struct ContentView: View {
                         .foregroundStyle(.red)
                         .font(.footnote)
                 }
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("Latest Nudge_Suite pkg URL", text: $latestSuiteURL)
+                        .textFieldStyle(.roundedBorder)
+                        .disabled(true)
+                    HStack {
+                        Button {
+                            fetchLatestSuiteURL()
+                        } label: {
+                            Label("Get Nudge_Suite pkg", systemImage: "arrow.down.circle")
+                        }
+                        .buttonStyle(.bordered)
+                        Button {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(latestSuiteURL, forType: .string)
+                        } label: {
+                            Label("Copy", systemImage: "doc.on.doc")
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(latestSuiteURL.isEmpty)
+                    }
+                    if !latestSuiteError.isEmpty {
+                        Text("Suite fetch error: \(latestSuiteError)")
+                            .foregroundStyle(.red)
+                            .font(.footnote)
+                    }
+                }
                 HStack {
                     Button {
                         refreshNudgeInfo()
@@ -439,6 +467,22 @@ struct ContentView: View {
                     latestNudgeError = error.localizedDescription
                     isFetchingLatestNudge = false
                     print("Latest Nudge fetch failed: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func fetchLatestSuiteURL() {
+        latestSuiteError = ""
+        Task {
+            do {
+                let url = try await NudgeReleaseService.latestSuiteDownloadURL()
+                await MainActor.run {
+                    latestSuiteURL = url
+                }
+            } catch {
+                await MainActor.run {
+                    latestSuiteError = error.localizedDescription
                 }
             }
         }
