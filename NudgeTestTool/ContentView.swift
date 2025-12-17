@@ -145,7 +145,7 @@ struct ContentView: View {
                 Divider()
                     .padding(.vertical, 4)
 
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text("SOFA Feed")
                             .font(.title3.weight(.semibold))
@@ -162,33 +162,57 @@ struct ContentView: View {
                     .disabled(isFetchingSOFA)
 
                     if let majors = sofaMajorDetails() {
-                        VStack(alignment: .leading, spacing: 4) {
-                            if let latest = majors.latest {
-                                Text("Latest Major \(latest.major) (\(latest.productVersion))")
+                        VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Latest Major (\(majors.latest?.productVersion ?? "n/a"))")
                                     .font(.headline)
-                                Text("Release Date: \(latest.releaseDate)")
-                                Text("Actively Exploited CVEs: \(latest.activelyExploitedCount)")
-                                if !latest.activelyExploitedList.isEmpty {
-                                    Text(latest.activelyExploitedList.joined(separator: ", "))
-                                        .font(.footnote)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(2)
-                                        .truncationMode(.middle)
-                                }
+                                Text("Release Date: \(majors.latest?.releaseDate ?? "n/a")")
+                                Text("Actively Exploited CVEs: \(majors.latest?.activelyExploitedCount ?? 0)")
                             }
                             if let previous = majors.previous {
                                 Divider().padding(.vertical, 4)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Previous Major (\(previous.productVersion))")
+                                        .font(.headline)
+                                    Text("Release Date: \(previous.releaseDate)")
+                                    Text("Actively Exploited CVEs: \(previous.activelyExploitedCount)")
+                                }
+                            }
+                        }
+                    } else if !sofaError.isEmpty {
+                        Text("SOFA error: \(sofaError)")
+                            .foregroundStyle(.red)
+                            .font(.footnote)
+                    } else {
+                        Text("No SOFA data loaded.")
+                            .foregroundStyle(.secondary)
+                            .font(.footnote)
+                    }
+                }
+
+                Divider()
+                    .padding(.vertical, 4)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Required Install By")
+                        .font(.title3.weight(.semibold))
+
+                    if let majors = sofaMajorDetails() {
+                        if let latest = majors.latest {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Latest Major \(latest.major) (\(latest.productVersion))")
+                                    .font(.headline)
+                                Text("Required Install By: \(latest.requiredInstallDate ?? "n/a")")
+                                Text("Nudge Launches On: \(latest.nudgeLaunchDate ?? "n/a")")
+                            }
+                        }
+                        if let previous = majors.previous {
+                            Divider().padding(.vertical, 4)
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text("Previous Major \(previous.major) (\(previous.productVersion))")
                                     .font(.headline)
-                                Text("Release Date: \(previous.releaseDate)")
-                                Text("Actively Exploited CVEs: \(previous.activelyExploitedCount)")
-                                if !previous.activelyExploitedList.isEmpty {
-                                    Text(previous.activelyExploitedList.joined(separator: ", "))
-                                        .font(.footnote)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(2)
-                                        .truncationMode(.middle)
-                                }
+                                Text("Required Install By: \(previous.requiredInstallDate ?? "n/a")")
+                                Text("Nudge Launches On: \(previous.nudgeLaunchDate ?? "n/a")")
                             }
                         }
                     } else if !sofaError.isEmpty {
@@ -334,12 +358,15 @@ struct ContentView: View {
             guard let entry = entries.first(where: { $0.latest != nil }) else { return nil }
             guard let release = entry.latest else { return nil }
             let exploitedList = release.activelyExploitedCVEs ?? []
+            let dates = computeDates(for: release)
             return SOFAMajorSummary(
                 major: major,
                 productVersion: release.productVersion ?? "n/a",
                 releaseDate: release.releaseDate ?? "n/a",
                 activelyExploitedCount: exploitedList.count,
-                activelyExploitedList: exploitedList
+                activelyExploitedList: exploitedList,
+                requiredInstallDate: dates.requiredInstallDate,
+                nudgeLaunchDate: dates.nudgeLaunchDate
             )
         }
 
@@ -347,6 +374,70 @@ struct ContentView: View {
         let previousSummary = majors.dropFirst().first.flatMap { summary(for: $0) }
 
         return (latest: latestSummary, previous: previousSummary)
+    }
+
+    private func computeDates(for release: SOFARelease) -> (requiredInstallDate: String?, nudgeLaunchDate: String?) {
+        guard let releaseDateString = release.releaseDate,
+              let releaseDate = ISO8601DateFormatter().date(from: releaseDateString) else {
+            return (requiredInstallDate: nil, nudgeLaunchDate: nil)
+        }
+
+        let requirement = parsedConfig?.osVersionRequirements.first
+        let optional = parsedConfig?.optionalFeatures
+        let userExperience = parsedConfig?.userExperience
+
+        let hasActive = !(release.activelyExploitedCVEs ?? []).isEmpty
+        let hasAnyCVE = (release.uniqueCVEsCount ?? 0) > 0 || !(release.cves ?? [:]).isEmpty
+
+        let isMajor = isMajorRelease(release.productVersion ?? "")
+
+        // Defaults per spec.
+        let defaultActive = 14
+        let defaultNonActive = 21
+        let defaultStandard = 28
+
+        let slaDays: Int
+        if hasActive {
+            slaDays = isMajor
+            ? (requirement?.activelyExploitedCVEsMajorUpgradeSLA ?? defaultActive)
+            : (requirement?.activelyExploitedCVEsMinorUpdateSLA ?? defaultActive)
+        } else if hasAnyCVE {
+            slaDays = isMajor
+            ? (requirement?.nonActivelyExploitedCVEsMajorUpgradeSLA ?? defaultNonActive)
+            : (requirement?.nonActivelyExploitedCVEsMinorUpdateSLA ?? defaultNonActive)
+        } else {
+            if optional?.disableNudgeForStandardInstalls == true {
+                return (requiredInstallDate: nil, nudgeLaunchDate: nil)
+            }
+            slaDays = isMajor
+            ? (requirement?.standardMajorUpgradeSLA ?? defaultStandard)
+            : (requirement?.standardMinorUpdateSLA ?? defaultStandard)
+        }
+
+        let calendar = Calendar(identifier: .gregorian)
+
+        guard let targetDate = calendar.date(byAdding: .day, value: slaDays, to: releaseDate) else {
+            return (nil, nil)
+        }
+
+        let launchDelayDays = isMajor
+        ? (userExperience?.nudgeMajorUpgradeEventLaunchDelay ?? 0)
+        : (userExperience?.nudgeMinorUpdateEventLaunchDelay ?? 0)
+
+        let launchDate = calendar.date(byAdding: .day, value: launchDelayDays, to: releaseDate)
+
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = .current
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let required = formatter.string(from: targetDate)
+        let launch = launchDate.map { formatter.string(from: $0) }
+        return (required, launch)
+    }
+
+    private func isMajorRelease(_ version: String) -> Bool {
+        let components = version.split(separator: ".").compactMap { Int($0) }
+        if components.count <= 1 { return true }
+        return (components.dropFirst().first ?? 0) == 0
     }
 
     private func extractMajor(_ osVersion: String) -> Int? {

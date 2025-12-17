@@ -4,4 +4,6 @@ struct SOFAMajorSummary {
     let releaseDate: String
     let activelyExploitedCount: Int
     let activelyExploitedList: [String]
+    let requiredInstallDate: String?
+    let nudgeLaunchDate: String?
 }
