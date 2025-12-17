@@ -23,26 +23,32 @@ struct ContentView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            HStack(spacing: 12) {
-                TextField("e.g. ls -la", text: $commandText)
-                    .textFieldStyle(.roundedBorder)
+            VStack(alignment: .leading, spacing: 8) {
+                TextEditor(text: $commandText)
+                    .frame(minHeight: 80)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.secondary.opacity(0.3))
+                    )
+                    .font(.system(.body, design: .monospaced))
+                    .padding(.horizontal, -4)
 
-                Button("Execute") {
-                    runCommand()
+                HStack(spacing: 12) {
+                    Button("Execute") {
+                        runCommand()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isExecuting || commandText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                    Button("Kill Nudge") {
+                        killNudge()
+                    }
+                    .buttonStyle(.bordered)
+
+                    Text("Sends a terminate to the Nudge process (user scope).")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(isExecuting || commandText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
-
-            HStack(spacing: 12) {
-                Button("Kill Nudge") {
-                    killNudge()
-                }
-                .buttonStyle(.bordered)
-
-                Text("Sends a terminate to the Nudge process (user scope).")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
             }
 
             if isExecuting {
