@@ -27,6 +27,9 @@ struct ContentView: View {
     @State private var nudgeVersion: String = "Unknown"
     @State private var nudgePath: String = "Unknown"
     @State private var nudgeDetectionLog: String = ""
+    @State private var latestNudgeVersion: String = "Unknown"
+    @State private var isFetchingLatestNudge: Bool = false
+    @State private var latestNudgeError: String = ""
     private var isSOFAEnabled: Bool {
         parsedConfig?.optionalFeatures?.utilizeSOFAFeed ?? true
     }
@@ -291,11 +294,28 @@ struct ContentView: View {
                 Text("Installed: \(nudgeInstalled ? "Yes" : "No")")
                 Text("Version: \(nudgeInstalled ? nudgeVersion : "n/a")")
                 Text("Path: \(nudgeInstalled ? nudgePath : "n/a")")
+                HStack(spacing: 8) {
+                    Text("Latest available: \(latestNudgeVersion)")
+                    if isFetchingLatestNudge {
+                        ProgressView().controlSize(.small)
+                    }
+                }
+                if !latestNudgeError.isEmpty {
+                    Text("Latest fetch error: \(latestNudgeError)")
+                        .foregroundStyle(.red)
+                        .font(.footnote)
+                }
                 HStack {
                     Button {
                         refreshNudgeInfo()
                     } label: {
                         Label("Refresh", systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.bordered)
+                    Button {
+                        fetchLatestNudgeVersion()
+                    } label: {
+                        Label("Check latest", systemImage: "arrow.triangle.2.circlepath")
                     }
                     .buttonStyle(.bordered)
                     Spacer()
@@ -318,6 +338,7 @@ struct ContentView: View {
             .frame(minWidth: 320)
             .onAppear {
                 refreshNudgeInfo()
+                fetchLatestNudgeVersion()
             }
         }
         .fileImporter(isPresented: $isShowingFileImporter,
@@ -340,6 +361,7 @@ struct ContentView: View {
                 parseConfig(at: URL(fileURLWithPath: defaultPath))
             }
             refreshNudgeInfo()
+            fetchLatestNudgeVersion()
         }
     }
 
@@ -398,6 +420,27 @@ struct ContentView: View {
             nudgeVersion = result.version
             nudgeDetectionLog = result.log
             print(result.log)
+        }
+    }
+
+    private func fetchLatestNudgeVersion() {
+        isFetchingLatestNudge = true
+        latestNudgeError = ""
+        Task {
+            do {
+                let version = try await NudgeReleaseService.latestVersion()
+                await MainActor.run {
+                    latestNudgeVersion = version
+                    isFetchingLatestNudge = false
+                }
+            } catch {
+                await MainActor.run {
+                    latestNudgeVersion = "Unavailable"
+                    latestNudgeError = error.localizedDescription
+                    isFetchingLatestNudge = false
+                    print("Latest Nudge fetch failed: \(error.localizedDescription)")
+                }
+            }
         }
     }
 
