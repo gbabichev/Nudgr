@@ -9,6 +9,7 @@ struct NudgeConfig: Decodable {
 struct OSVersionRequirement: Decodable {
     let requiredMinimumOSVersion: String
     let targetedOSVersionsRule: String?
+    let requiredInstallationDate: String?
     let activelyExploitedCVEsMajorUpgradeSLA: Int?
     let activelyExploitedCVEsMinorUpdateSLA: Int?
     let nonActivelyExploitedCVEsMajorUpgradeSLA: Int?

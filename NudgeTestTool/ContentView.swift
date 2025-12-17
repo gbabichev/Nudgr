@@ -21,6 +21,9 @@ struct ContentView: View {
     @State private var sofaFeed: SOFAFeed?
     @State private var sofaError: String = ""
     @State private var isFetchingSOFA: Bool = false
+    private var isSOFAEnabled: Bool {
+        parsedConfig?.optionalFeatures?.utilizeSOFAFeed ?? true
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 24) {
@@ -119,24 +122,24 @@ struct ContentView: View {
                     }
                 }
 
-                if let config = parsedConfig {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Parsed JSON")
-                            .font(.headline)
-                        if let useSOFA = config.optionalFeatures?.utilizeSOFAFeed {
-                            Text("Utilize SOFA Feed: \(useSOFA ? "true" : "false")")
-                        } else {
-                            Text("Utilize SOFA Feed: not set")
-                                .foregroundStyle(.secondary)
+                    if let config = parsedConfig {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Parsed JSON")
+                                .font(.headline)
+                            if let useSOFA = config.optionalFeatures?.utilizeSOFAFeed {
+                                Text("Utilize SOFA Feed: \(useSOFA ? "true" : "false")")
+                            } else {
+                                Text("Utilize SOFA Feed: not set")
+                                    .foregroundStyle(.secondary)
+                            }
+                            if let requirement = config.osVersionRequirements.first {
+                                Text("Required Minimum OS: \(requirement.requiredMinimumOSVersion)")
+                            } else {
+                                Text("No osVersionRequirements found.")
+                                    .foregroundStyle(.secondary)
+                            }
                         }
-                        if let requirement = config.osVersionRequirements.first {
-                            Text("Required Minimum OS: \(requirement.requiredMinimumOSVersion)")
-                        } else {
-                            Text("No osVersionRequirements found.")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                } else if !parseError.isEmpty {
+                    } else if !parseError.isEmpty {
                     Text("Parse error: \(parseError)")
                         .foregroundStyle(.red)
                         .font(.footnote)
@@ -145,59 +148,61 @@ struct ContentView: View {
                 Divider()
                     .padding(.vertical, 4)
 
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("SOFA Feed")
-                            .font(.title3.weight(.semibold))
-                        if isFetchingSOFA {
-                            ProgressView()
-                                .controlSize(.small)
-                        }
-                    }
-
-                    Button("Fetch SOFA feed") {
-                        fetchSOFAFeed()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(isFetchingSOFA)
-
-                    if let majors = sofaMajorDetails() {
-                        VStack(alignment: .leading, spacing: 12) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Latest Major (\(majors.latest?.productVersion ?? "n/a"))")
-                                    .font(.headline)
-                                Text("Release Date: \(majors.latest?.releaseDate ?? "n/a")")
-                                Text("Actively Exploited CVEs: \(majors.latest?.activelyExploitedCount ?? 0)")
+                if isSOFAEnabled {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("SOFA Feed")
+                                .font(.title3.weight(.semibold))
+                            if isFetchingSOFA {
+                                ProgressView()
+                                    .controlSize(.small)
                             }
-                            if let previous = majors.previous {
-                                Divider().padding(.vertical, 4)
+                        }
+
+                        Button("Fetch SOFA feed") {
+                            fetchSOFAFeed()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(isFetchingSOFA)
+
+                        if let majors = sofaMajorDetails() {
+                            VStack(alignment: .leading, spacing: 12) {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Previous Major (\(previous.productVersion))")
+                                    Text("Latest Major (\(majors.latest?.productVersion ?? "n/a"))")
                                         .font(.headline)
-                                    Text("Release Date: \(previous.releaseDate)")
-                                    Text("Actively Exploited CVEs: \(previous.activelyExploitedCount)")
+                                    Text("Release Date: \(majors.latest?.releaseDate ?? "n/a")")
+                                    Text("Actively Exploited CVEs: \(majors.latest?.activelyExploitedCount ?? 0)")
+                                }
+                                if let previous = majors.previous {
+                                    Divider().padding(.vertical, 4)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Previous Major (\(previous.productVersion))")
+                                            .font(.headline)
+                                        Text("Release Date: \(previous.releaseDate)")
+                                        Text("Actively Exploited CVEs: \(previous.activelyExploitedCount)")
+                                    }
                                 }
                             }
+                        } else if !sofaError.isEmpty {
+                            Text("SOFA error: \(sofaError)")
+                                .foregroundStyle(.red)
+                                .font(.footnote)
+                        } else {
+                            Text("No SOFA data loaded.")
+                                .foregroundStyle(.secondary)
+                                .font(.footnote)
                         }
-                    } else if !sofaError.isEmpty {
-                        Text("SOFA error: \(sofaError)")
-                            .foregroundStyle(.red)
-                            .font(.footnote)
-                    } else {
-                        Text("No SOFA data loaded.")
-                            .foregroundStyle(.secondary)
-                            .font(.footnote)
                     }
-                }
 
-                Divider()
-                    .padding(.vertical, 4)
+                    Divider()
+                        .padding(.vertical, 4)
+                }
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Required Install By")
                         .font(.title3.weight(.semibold))
 
-                    if let majors = sofaMajorDetails() {
+                    if isSOFAEnabled, let majors = sofaMajorDetails() {
                         if let latest = majors.latest {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Latest Major \(latest.major) (\(latest.productVersion))")
@@ -214,6 +219,13 @@ struct ContentView: View {
                                 Text("Required Install By: \(previous.requiredInstallDate ?? "n/a")")
                                 Text("Nudge Launches On: \(previous.nudgeLaunchDate ?? "n/a")")
                             }
+                        }
+                    } else if let local = localRequirementSummary() {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Required Minimum OS: \(local.requiredMinimumOSVersion)")
+                                .font(.headline)
+                            Text("Required Install By: \(local.requiredInstallDate ?? "n/a")")
+                            Text("Nudge Launches On: \(local.nudgeLaunchDate ?? "n/a")")
                         }
                     } else if !sofaError.isEmpty {
                         Text("SOFA error: \(sofaError)")
@@ -376,9 +388,24 @@ struct ContentView: View {
         return (latest: latestSummary, previous: previousSummary)
     }
 
+    private func localRequirementSummary() -> LocalRequirementSummary? {
+        guard let requirement = parsedConfig?.osVersionRequirements.first else { return nil }
+        let requiredDate = requirement.requiredInstallationDate.flatMap { parseISODate($0) }
+        let requiredString = requiredDate.flatMap { isoLocalString(from: $0) }
+
+        let launchDate = computeLocalNudgeLaunchDate(requirement: requirement, requiredDate: requiredDate)
+        let launchString = launchDate.flatMap { isoLocalString(from: $0) }
+
+        return LocalRequirementSummary(
+            requiredMinimumOSVersion: requirement.requiredMinimumOSVersion,
+            requiredInstallDate: requiredString,
+            nudgeLaunchDate: launchString
+        )
+    }
+
     private func computeDates(for release: SOFARelease) -> (requiredInstallDate: String?, nudgeLaunchDate: String?) {
         guard let releaseDateString = release.releaseDate,
-              let releaseDate = ISO8601DateFormatter().date(from: releaseDateString) else {
+              let releaseDate = parseISODate(releaseDateString) else {
             return (requiredInstallDate: nil, nudgeLaunchDate: nil)
         }
 
@@ -426,18 +453,56 @@ struct ContentView: View {
 
         let launchDate = calendar.date(byAdding: .day, value: launchDelayDays, to: releaseDate)
 
-        let formatter = ISO8601DateFormatter()
-        formatter.timeZone = .current
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let required = formatter.string(from: targetDate)
-        let launch = launchDate.map { formatter.string(from: $0) }
+        let required = isoLocalString(from: targetDate)
+        let launch = launchDate.flatMap { isoLocalString(from: $0) }
         return (required, launch)
+    }
+
+    private func computeLocalNudgeLaunchDate(requirement: OSVersionRequirement, requiredDate: Date?) -> Date? {
+        guard let requiredDate else { return nil }
+        let isMajor = isMajorRelease(requirement.requiredMinimumOSVersion)
+
+        // SLA values invert the required date back to an approximate release date.
+        let defaultStandard = 28
+        let slaDays = isMajor
+        ? (requirement.standardMajorUpgradeSLA ?? defaultStandard)
+        : (requirement.standardMinorUpdateSLA ?? defaultStandard)
+
+        let calendar = Calendar(identifier: .gregorian)
+        guard let releaseDate = calendar.date(byAdding: .day, value: -slaDays, to: requiredDate) else { return nil }
+
+        let launchDelayDays = isMajor
+        ? (parsedConfig?.userExperience?.nudgeMajorUpgradeEventLaunchDelay ?? 0)
+        : (parsedConfig?.userExperience?.nudgeMinorUpdateEventLaunchDelay ?? 0)
+
+        return calendar.date(byAdding: .day, value: launchDelayDays, to: releaseDate)
     }
 
     private func isMajorRelease(_ version: String) -> Bool {
         let components = version.split(separator: ".").compactMap { Int($0) }
         if components.count <= 1 { return true }
         return (components.dropFirst().first ?? 0) == 0
+    }
+
+    private func parseISODate(_ string: String) -> Date? {
+        let iso = ISO8601DateFormatter()
+        iso.timeZone = TimeZone(secondsFromGMT: 0)
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = iso.date(from: string) { return date }
+        iso.formatOptions = [.withInternetDateTime]
+        if let date = iso.date(from: string) { return date }
+
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        df.timeZone = TimeZone(secondsFromGMT: 0)
+        return df.date(from: string)
+    }
+
+    private func isoLocalString(from date: Date) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = .current
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.string(from: date)
     }
 
     private func extractMajor(_ osVersion: String) -> Int? {
