@@ -42,26 +42,9 @@ struct ContentView: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color.secondary.opacity(0.3))
                         )
-                        .font(.system(.body, design: .monospaced))
-                        .padding(.horizontal, -4)
-
-                    HStack(spacing: 12) {
-                        Button("Execute") {
-                            runCommand()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(isExecuting || commandText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-
-                        Button("Kill Nudge") {
-                            killNudge()
-                        }
-                        .buttonStyle(.bordered)
-
-                        Text("Sends a terminate to the Nudge process (user scope).")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                    .font(.system(.body, design: .monospaced))
+                    .padding(.horizontal, -4)
+            }
 
                 if isExecuting {
                     HStack(spacing: 8) {
@@ -99,20 +82,15 @@ struct ContentView: View {
                 }
             }
 
-            VStack(alignment: .leading, spacing: 12) {
-                Text("JSON & Settings")
-                    .font(.title3.weight(.semibold))
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("JSON & Settings")
+                        .font(.title3.weight(.semibold))
 
                 Text("Pick a JSON file to use for -json-url. Command updates automatically.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Button("Select JSON…") {
-                        isShowingFileImporter = true
-                    }
-                    .buttonStyle(.bordered)
-
                     if !selectedJSONPath.isEmpty {
                         Text("Selected: \(selectedJSONPath)")
                             .font(.footnote)
@@ -157,13 +135,15 @@ struct ContentView: View {
                                 ProgressView()
                                     .controlSize(.small)
                             }
+                            Spacer()
+                            Button {
+                                fetchSOFAFeed()
+                            } label: {
+                                Image(systemName: "arrow.clockwise")
+                            }
+                            .buttonStyle(.bordered)
+                            .disabled(isFetchingSOFA)
                         }
-
-                        Button("Fetch SOFA feed") {
-                            fetchSOFAFeed()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(isFetchingSOFA)
 
                         if let majors = sofaMajorDetails() {
                             HStack(alignment: .top, spacing: 16) {
@@ -249,6 +229,40 @@ struct ContentView: View {
             }
         }
         .padding(24)
+        .toolbar {
+            ToolbarItemGroup(placement: .navigation) {
+                Button {
+                    isShowingFileImporter = true
+                } label: {
+                    Label("Select JSON", systemImage: "doc")
+                }
+                .buttonStyle(.bordered)
+                
+            }
+            
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button {
+                    killNudge()
+                } label: {
+                    Label("Kill Nudge", systemImage: "xmark.circle.fill")
+                        .symbolRenderingMode(.multicolor)
+                }
+                .buttonStyle(.bordered)
+                .tint(.red)
+                .disabled(isExecuting)
+
+                Button {
+                    runCommand()
+                } label: {
+                    Label("Execute", systemImage: "play.fill")
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundStyle(.blue)
+                }
+                .buttonStyle(.bordered)
+                .tint(.blue)
+                .disabled(isExecuting || commandText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
         .fileImporter(isPresented: $isShowingFileImporter,
                       allowedContentTypes: [.json],
                       allowsMultipleSelection: false) { result in
