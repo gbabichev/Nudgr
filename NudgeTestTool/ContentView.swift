@@ -16,6 +16,8 @@ struct ContentView: View {
     @State private var activityLog: String = ""
     @State private var selectedJSONPath: String = ""
     @State private var isShowingFileImporter: Bool = false
+    @State private var parsedConfig: NudgeConfig?
+    @State private var parseError: String = ""
 
     var body: some View {
         HStack(alignment: .top, spacing: 24) {
@@ -114,6 +116,29 @@ struct ContentView: View {
                     }
                 }
 
+                if let config = parsedConfig {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Parsed JSON")
+                            .font(.headline)
+                        if let useSOFA = config.optionalFeatures?.utilizeSOFAFeed {
+                            Text("Utilize SOFA Feed: \(useSOFA ? "true" : "false")")
+                        } else {
+                            Text("Utilize SOFA Feed: not set")
+                                .foregroundStyle(.secondary)
+                        }
+                        if let requirement = config.osVersionRequirements.first {
+                            Text("Required Minimum OS: \(requirement.requiredMinimumOSVersion)")
+                        } else {
+                            Text("No osVersionRequirements found.")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } else if !parseError.isEmpty {
+                    Text("Parse error: \(parseError)")
+                        .foregroundStyle(.red)
+                        .font(.footnote)
+                }
+
                 Spacer()
             }
         }
@@ -135,6 +160,7 @@ struct ContentView: View {
                 let defaultPath = defaultJSONPath()
                 selectedJSONPath = defaultPath
                 commandText = buildCommand(jsonPath: defaultPath)
+                parseConfig(at: URL(fileURLWithPath: defaultPath))
             }
         }
     }
@@ -195,6 +221,7 @@ struct ContentView: View {
         selectedJSONPath = resolvedURL.path
         commandText = buildCommand(jsonPath: resolvedURL.path)
         appendLog("Selected JSON: \(resolvedURL.lastPathComponent)")
+        parseConfig(at: resolvedURL)
     }
 
     private func buildCommand(jsonPath: String) -> String {
@@ -204,5 +231,18 @@ struct ContentView: View {
 
     private func defaultJSONPath() -> String {
         Bundle.main.url(forResource: "patch-latest", withExtension: "json")?.path ?? "patch-latest.json"
+    }
+
+    private func parseConfig(at url: URL) {
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            let config = try decoder.decode(NudgeConfig.self, from: data)
+            parsedConfig = config
+            parseError = ""
+        } catch {
+            parsedConfig = nil
+            parseError = error.localizedDescription
+        }
     }
 }
