@@ -23,9 +23,9 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		FF4CE81F2EF2EF9F005CF6FC /* NudgeTestTool */ = {
+		FF4CE81F2EF2EF9F005CF6FC /* Nudgr */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = NudgeTestTool;
+			path = Nudgr;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -44,7 +44,7 @@
 		FF4CE8142EF2EF9F005CF6FC = {
 			isa = PBXGroup;
 			children = (
-				FF4CE81F2EF2EF9F005CF6FC /* NudgeTestTool */,
+				FF4CE81F2EF2EF9F005CF6FC /* Nudgr */,
 				FF4CE81E2EF2EF9F005CF6FC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -60,9 +60,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		FF4CE81C2EF2EF9F005CF6FC /* NudgeTestTool */ = {
+		FF4CE81C2EF2EF9F005CF6FC /* Nudgr */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FF4CE8282EF2EFA0005CF6FC /* Build configuration list for PBXNativeTarget "NudgeTestTool" */;
+			buildConfigurationList = FF4CE8282EF2EFA0005CF6FC /* Build configuration list for PBXNativeTarget "Nudgr" */;
 			buildPhases = (
 				FF4CE8192EF2EF9F005CF6FC /* Sources */,
 				FF4CE81A2EF2EF9F005CF6FC /* Frameworks */,
@@ -74,9 +74,9 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				FF4CE81F2EF2EF9F005CF6FC /* NudgeTestTool */,
+				FF4CE81F2EF2EF9F005CF6FC /* Nudgr */,
 			);
-			name = NudgeTestTool;
+			name = Nudgr;
 			packageProductDependencies = (
 			);
 			productName = NudgeTestTool;
@@ -98,7 +98,7 @@
 					};
 				};
 			};
-			buildConfigurationList = FF4CE8182EF2EF9F005CF6FC /* Build configuration list for PBXProject "NudgeTestTool" */;
+			buildConfigurationList = FF4CE8182EF2EF9F005CF6FC /* Build configuration list for PBXProject "Nudgr" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -112,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FF4CE81C2EF2EF9F005CF6FC /* NudgeTestTool */,
+				FF4CE81C2EF2EF9F005CF6FC /* Nudgr */,
 			);
 		};
 /* End PBXProject section */
@@ -327,7 +327,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		FF4CE8182EF2EF9F005CF6FC /* Build configuration list for PBXProject "NudgeTestTool" */ = {
+		FF4CE8182EF2EF9F005CF6FC /* Build configuration list for PBXProject "Nudgr" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FF4CE8262EF2EFA0005CF6FC /* Debug */,
@@ -336,7 +336,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FF4CE8282EF2EFA0005CF6FC /* Build configuration list for PBXNativeTarget "NudgeTestTool" */ = {
+		FF4CE8282EF2EFA0005CF6FC /* Build configuration list for PBXNativeTarget "Nudgr" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FF4CE8292EF2EFA0005CF6FC /* Debug */,
