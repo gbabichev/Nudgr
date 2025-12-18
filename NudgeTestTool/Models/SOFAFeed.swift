@@ -179,4 +179,5 @@ struct SOFAMajorSummary {
     let activelyExploitedList: [String]
     let requiredInstallDate: String?
     let nudgeLaunchDate: String?
+    var highlight: Bool = false
 }

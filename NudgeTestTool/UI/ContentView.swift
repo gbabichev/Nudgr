@@ -227,7 +227,9 @@ struct ContentView: View {
                                     Text("Latest Major \(latest.major) (\(latest.productVersion))")
                                         .font(.headline)
                                     Text("Required Install By: \(latest.requiredInstallDate ?? "n/a")")
+                                        .foregroundStyle(latest.highlight ? .red : .primary)
                                     Text("Nudge Launches On: \(latest.nudgeLaunchDate ?? "n/a")")
+                                        .foregroundStyle(latest.highlight ? .red : .primary)
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
@@ -237,7 +239,9 @@ struct ContentView: View {
                                     Text("Previous Major \(previous.major) (\(previous.productVersion))")
                                         .font(.headline)
                                     Text("Required Install By: \(previous.requiredInstallDate ?? "n/a")")
+                                        .foregroundStyle(previous.highlight ? .red : .primary)
                                     Text("Nudge Launches On: \(previous.nudgeLaunchDate ?? "n/a")")
+                                        .foregroundStyle(previous.highlight ? .red : .primary)
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
@@ -247,7 +251,9 @@ struct ContentView: View {
                             Text("Required Minimum OS: \(local.requiredMinimumOSVersion)")
                                 .font(.headline)
                             Text("Required Install By: \(local.requiredInstallDate ?? "n/a")")
+                                .foregroundStyle(local.highlight ? .red : .primary)
                             Text("Nudge Launches On: \(local.nudgeLaunchDate ?? "n/a")")
+                                .foregroundStyle(local.highlight ? .red : .primary)
                         }
                     } else if !model.sofaError.isEmpty {
                         Text("SOFA error: \(model.sofaError)")

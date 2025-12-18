@@ -258,7 +258,23 @@ class NudgeViewModel: ObservableObject {
         let latestSummary = summary(for: latestMajor)
         let previousSummary = majors.dropFirst().first.flatMap { summary(for: $0) }
 
-        return (latest: latestSummary, previous: previousSummary)
+        var latest = latestSummary
+        var previous = previousSummary
+        if let req = parsedConfig?.osVersionRequirements.first?.requiredMinimumOSVersion.lowercased() {
+            if req == "latest" {
+                latest?.highlight = true
+            } else if req == "latest-minor" {
+                previous?.highlight = true
+            } else {
+                if let ver = latest?.productVersion.lowercased(), ver == req {
+                    latest?.highlight = true
+                } else if let ver = previous?.productVersion.lowercased(), ver == req {
+                    previous?.highlight = true
+                }
+            }
+        }
+
+        return (latest: latest, previous: previous)
     }
 
     func localRequirementSummary() -> LocalRequirementSummary? {
@@ -269,10 +285,14 @@ class NudgeViewModel: ObservableObject {
         let launchDate = computeLocalNudgeLaunchDate(requirement: requirement, requiredDate: requiredDate)
         let launchString = launchDate.flatMap { isoLocalString(from: $0) }
 
+        let lower = requirement.requiredMinimumOSVersion.lowercased()
+        let highlight = !lower.isEmpty
+
         return LocalRequirementSummary(
             requiredMinimumOSVersion: requirement.requiredMinimumOSVersion,
             requiredInstallDate: requiredString,
-            nudgeLaunchDate: launchString
+            nudgeLaunchDate: launchString,
+            highlight: highlight
         )
     }
 
