@@ -9,12 +9,19 @@ struct NudgeInfoSheet: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Nudge Status")
+            
+            // Title & Version
+            Text("Nudge Info")
                 .font(.title2.weight(.semibold))
+            
+            Text("Nudge Local Status")
+                .bold()
+            
             Text("Installed: \(model.nudgeInstalled ? "Yes" : "No")")
             Text("Version: \(model.nudgeInstalled ? model.nudgeVersion : "n/a")")
             Text("Path: \(model.nudgeInstalled ? model.nudgePath : "n/a")")
             
+            // GitHub data
             Divider()
             
             Text("Latest Release on GitHub")
@@ -32,8 +39,12 @@ struct NudgeInfoSheet: View {
                     .font(.footnote)
             }
             
+            // Action Buttons
             Divider()
             
+            Text("Actions")
+                .bold()
+            // Refresh install & GH Version
             HStack {
                 
                 Button {
@@ -52,6 +63,7 @@ struct NudgeInfoSheet: View {
                 .buttonStyle(.bordered)
             }
             
+            // Copy Install & Uninstall cmd
             HStack {
                 
                 Button {
@@ -82,39 +94,62 @@ struct NudgeInfoSheet: View {
                 }
                 .buttonStyle(.bordered)
                 
-//                Button {
-//                    model.fetchLatestSuiteURL()
-//                    NSPasteboard.general.clearContents()
-//                    NSPasteboard.general.setString(model.latestSuiteURL, forType: .string)
-//                    triggerToast("Copied to clipboard")
-//                } label: {
-//                    Label("Get Nudge_Suite pkg", systemImage: "arrow.down.circle")
-//                }
-//                .buttonStyle(.bordered)
-                
             }
             
-            VStack(alignment: .leading, spacing: 4) {
-                TextField("", text: $model.latestSuiteURL)
-                    .textFieldStyle(.roundedBorder)
-                
-                if !model.latestSuiteError.isEmpty {
-                    Text("Suite fetch error: \(model.latestSuiteError)")
-                        .foregroundStyle(.red)
-                        .font(.footnote)
+            Divider()
+            
+            Text("Logging")
+                .bold()
+            // Logging Info
+            Link("Nudge logging documentation", destination: URL(string: "https://github.com/macadmins/nudge/wiki/Logging")!)
+                .font(.footnote)
+            
+            HStack(spacing: 8) {
+                Button("Default Logging") {
+                    let cmd = #"log stream --predicate 'subsystem == "com.github.macadmins.Nudge"' --style syslog --color none"#
+                    model.commandText = cmd
+                    model.latestSuiteURL = cmd
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(cmd, forType: .string)
+                    triggerToast("Copied logging command")
                 }
+                .buttonStyle(.bordered)
+                
+                Button("More Logging") {
+                    let cmd = #"log stream --predicate 'subsystem == "com.github.macadmins.Nudge"' --info --style syslog --color none"#
+                    model.commandText = cmd
+                    model.latestSuiteURL = cmd
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(cmd, forType: .string)
+                    triggerToast("Copied logging command")
+                }
+                .buttonStyle(.bordered)
+                
+                Button("JSON Logging") {
+                    let cmd = #"log show --predicate 'subsystem == "com.github.macadmins.Nudge"' --info --style json --debug"#
+                    model.commandText = cmd
+                    model.latestSuiteURL = cmd
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(cmd, forType: .string)
+                    triggerToast("Copied logging command")
+                }
+                .buttonStyle(.bordered)
+                
             }
+
+Divider()
+
+            // Command Line Text Box
+            TextField("Terminal Commands Shown Here", text: $model.latestSuiteURL)
+                .textFieldStyle(.roundedBorder)
             
+//            if !model.latestSuiteError.isEmpty {
+//                Text("Suite fetch error: \(model.latestSuiteError)")
+//                    .foregroundStyle(.red)
+//                    .font(.footnote)
+//            }
             
-            //            Divider().padding(.vertical, 4)
-            //            Text("Detection log")
-            //                .font(.headline)
-            //            ScrollView {
-            //                Text(model.nudgeDetectionLog.isEmpty ? "No log recorded." : model.nudgeDetectionLog)
-            //                    .font(.system(.footnote, design: .monospaced))
-            //                    .frame(maxWidth: .infinity, alignment: .leading)
-            //            }
-            //            .frame(maxHeight: 180)
+
             
             Divider()
             
