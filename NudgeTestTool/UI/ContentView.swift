@@ -19,7 +19,7 @@ struct ContentView: View {
                 Text("Command Builder")
                     .font(.title2.weight(.semibold))
 
-                Text("Enter a shell command and tap Execute to run it.")
+                Text("")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
@@ -71,16 +71,20 @@ struct ContentView: View {
             }
 
             VStack(alignment: .leading, spacing: 12) {
-                Text("JSON & Settings")
+                Text("JSON Info")
                     .font(.title3.weight(.semibold))
-
-                Text("Pick a JSON file to use for -json-url. Command updates automatically.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
 
                 VStack(alignment: .leading, spacing: 8) {
                     if !model.selectedJSONPath.isEmpty {
                         Text("Selected: \(model.selectedJSONPath)")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(3)
+                            .truncationMode(.middle)
+                    }
+                    else {
+                        Text("Please select a JSON file for inspection.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .lineLimit(3)
@@ -114,59 +118,63 @@ struct ContentView: View {
                 Divider()
                     .padding(.vertical, 4)
 
-                if model.isSOFAEnabled {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("SOFA Feed")
-                                .font(.title3.weight(.semibold))
-                            if model.isFetchingSOFA {
-                                ProgressView()
-                                    .controlSize(.small)
-                            }
-                            Spacer()
-                            Button {
-                                model.fetchSOFAFeed()
-                            } label: {
-                                Image(systemName: "arrow.clockwise")
-                            }
-                            .buttonStyle(.bordered)
-                            .disabled(model.isFetchingSOFA)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("SOFA Feed")
+                            .font(.title3.weight(.semibold))
+                        if model.isFetchingSOFA {
+                            ProgressView()
+                                .controlSize(.small)
                         }
-
-                        if let majors = model.sofaMajorDetails() {
-                            HStack(alignment: .top, spacing: 16) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Latest Major (\(majors.latest?.productVersion ?? "n/a"))")
-                                        .font(.headline)
-                                    Text("Release Date: \(majors.latest?.releaseDate ?? "n/a")")
-                                    Text("Actively Exploited CVEs: \(majors.latest?.activelyExploitedCount ?? 0)")
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-
-                                Divider()
-
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Previous Major (\(majors.previous?.productVersion ?? "n/a"))")
-                                        .font(.headline)
-                                    Text("Release Date: \(majors.previous?.releaseDate ?? "n/a")")
-                                    Text("Actively Exploited CVEs: \(majors.previous?.activelyExploitedCount ?? 0)")
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        } else if !model.sofaError.isEmpty {
-                            Text("SOFA error: \(model.sofaError)")
-                                .foregroundStyle(.red)
-                                .font(.footnote)
-                        } else {
-                            Text("No SOFA data loaded.")
-                                .foregroundStyle(.secondary)
-                                .font(.footnote)
+                        Spacer()
+                        Button {
+                            model.fetchSOFAFeed()
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
                         }
+                        .buttonStyle(.bordered)
+                        .disabled(model.isFetchingSOFA)
+                    }
+                    
+                    if !model.isSOFAEnabled {
+                        Text("SOFA is not enabled in the selected JSON file.")
+                            .foregroundStyle(.red)
                     }
 
-                    Divider()
-                        .padding(.vertical, 4)
+                    if let majors = model.sofaMajorDetails() {
+                        HStack(alignment: .top, spacing: 16) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Latest Major (\(majors.latest?.productVersion ?? "n/a"))")
+                                    .font(.headline)
+                                Text("Release Date: \(majors.latest?.releaseDate ?? "n/a")")
+                                Text("Actively Exploited CVEs: \(majors.latest?.activelyExploitedCount ?? 0)")
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                            Divider()
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Previous Major (\(majors.previous?.productVersion ?? "n/a"))")
+                                    .font(.headline)
+                                Text("Release Date: \(majors.previous?.releaseDate ?? "n/a")")
+                                Text("Actively Exploited CVEs: \(majors.previous?.activelyExploitedCount ?? 0)")
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    } else if !model.sofaError.isEmpty {
+                        Text("SOFA error: \(model.sofaError)")
+                            .foregroundStyle(.red)
+                            .font(.footnote)
+                    } else {
+                        Text("No SOFA data loaded.")
+                            .foregroundStyle(.secondary)
+                            .font(.footnote)
+                    }
                 }
+                
+                Divider()
+                    .padding(.vertical, 4)
+
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Required Install By")
@@ -281,7 +289,7 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            model.initializeDefaultsIfNeeded()
+            //model.initializeDefaultsIfNeeded()
             model.refreshNudgeInfo()
             model.fetchLatestNudgeVersion()
         }

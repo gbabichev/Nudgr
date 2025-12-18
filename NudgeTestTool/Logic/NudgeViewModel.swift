@@ -25,6 +25,7 @@ class NudgeViewModel: ObservableObject {
     @Published var latestNudgeVersion: String = "Unknown"
     @Published var isFetchingLatestNudge: Bool = false
     @Published var latestNudgeError: String = ""
+    @Published var latestSuiteDownloadURL: String = ""
     @Published var latestSuiteURL: String = ""
     @Published var latestSuiteError: String = ""
 
@@ -119,11 +120,21 @@ class NudgeViewModel: ObservableObject {
         Task {
             do {
                 let url = try await NudgeReleaseService.latestSuiteDownloadURL()
+                latestSuiteDownloadURL = url
                 latestSuiteURL = url
             } catch {
                 latestSuiteError = error.localizedDescription
             }
         }
+    }
+
+    func ensureSuiteURLAndInstallerCommand() async throws -> String {
+        if latestSuiteDownloadURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let url = try await NudgeReleaseService.latestSuiteDownloadURL()
+            latestSuiteDownloadURL = url
+            latestSuiteURL = url
+        }
+        return buildInstallerCommand()
     }
 
     func handleJSONSelection(url: URL) {
@@ -141,6 +152,15 @@ class NudgeViewModel: ObservableObject {
     func buildCommand(jsonPath: String) -> String {
         let escapedPath = jsonPath.replacingOccurrences(of: "\"", with: "\\\"")
         return #"/Applications/Utilities/Nudge.app/Contents/MacOS/Nudge -simulate-os-version "26.0" -json-url "file://\#(escapedPath)" -disable-random-delay -simulate-date "2025-12-24T08:00:00Z""#
+    }
+
+    func buildInstallerCommand(for pkgURL: String? = nil) -> String {
+        let candidate = pkgURL?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = (candidate?.isEmpty == false ? candidate! : latestSuiteDownloadURL).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            return #"curl -L "<pkg_url>" -o /tmp/Nudge_Suite.pkg && sudo installer -pkg /tmp/Nudge_Suite.pkg -target /"#
+        }
+        return #"curl -L "\#(trimmed)" -o /tmp/Nudge_Suite.pkg && sudo installer -pkg /tmp/Nudge_Suite.pkg -target /"#
     }
 
     func defaultJSONPath() -> String {

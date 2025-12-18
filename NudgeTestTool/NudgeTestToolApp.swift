@@ -13,5 +13,6 @@ struct NudgeTestToolApp: App {
         WindowGroup {
             ContentView()
         }
+        .windowStyle(.hiddenTitleBar)
     }
 }
