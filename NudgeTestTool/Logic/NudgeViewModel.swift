@@ -28,17 +28,20 @@ class NudgeViewModel: ObservableObject {
     @Published var latestSuiteDownloadURL: String = ""
     @Published var latestSuiteURL: String = ""
     @Published var latestSuiteError: String = ""
+    @AppStorage("simulateDate") var simulateDate: Date = Calendar(identifier: .gregorian).startOfDay(for: Date())
+    @AppStorage("simulateOSVersion") var simulateOSVersion: String = "26.0"
+    @AppStorage("includeSimulateDate") var includeSimulateDate: Bool = true
+    @AppStorage("includeSimulateOSVersion") var includeSimulateOSVersion: Bool = true
 
     var isSOFAEnabled: Bool {
         parsedConfig?.optionalFeatures?.utilizeSOFAFeed ?? true
     }
 
     func initializeDefaultsIfNeeded() {
-        if commandText.isEmpty {
-            let defaultPath = defaultJSONPath()
-            selectedJSONPath = defaultPath
-            commandText = buildCommand(jsonPath: defaultPath)
-            parseConfig(at: URL(fileURLWithPath: defaultPath))
+        if nudgeInstalled {
+            commandText = buildCommand(jsonPath: "<your_json_url_here>")
+        } else {
+            commandText = "Nudge is not found. Please click the orange warning symbol in the toolbar to install Nudge."
         }
     }
 
@@ -141,8 +144,39 @@ class NudgeViewModel: ObservableObject {
     }
 
     func buildCommand(jsonPath: String) -> String {
-        let escapedPath = jsonPath.replacingOccurrences(of: "\"", with: "\\\"")
-        return #"/Applications/Utilities/Nudge.app/Contents/MacOS/Nudge -simulate-os-version "26.0" -json-url "file://\#(escapedPath)" -disable-random-delay -simulate-date "2025-12-24T08:00:00Z""#
+        var normalizedPath = jsonPath
+        if normalizedPath.lowercased().hasPrefix("file://") {
+            normalizedPath.removeFirst("file://".count)
+        }
+        let escapedPath = normalizedPath.replacingOccurrences(of: "\"", with: "\\\"")
+        var parts: [String] = [#"/Applications/Utilities/Nudge.app/Contents/MacOS/Nudge"#]
+        parts.append(#"-json-url "file://\#(escapedPath)""#)
+        parts.append("-disable-random-delay")
+        if includeSimulateDate {
+            let midnightUTC = Calendar(identifier: .gregorian).date(bySettingHour: 0, minute: 0, second: 0, of: simulateDate) ?? simulateDate
+            let dateString = iso8601ZuluString(from: midnightUTC)
+            parts.append(#"-simulate-date "\#(dateString)""#)
+        }
+        if includeSimulateOSVersion {
+            parts.append(#"-simulate-os-version "\#(simulateOSVersion)""#)
+        }
+        return parts.joined(separator: " ")
+    }
+
+    func rebuildCommandPreservingJSONURL(fallback: String = "<your_json_url_here>") {
+        let jsonPath = extractJSONURL(from: commandText) ?? fallback
+        commandText = buildCommand(jsonPath: jsonPath)
+    }
+
+    func extractJSONURL(from command: String) -> String? {
+        guard let range = command.range(of: #"-json-url ""#) else { return nil }
+        let remainder = command[range.upperBound...]
+        guard let endQuote = remainder.firstIndex(of: "\"") else { return nil }
+        var urlString = String(remainder[..<endQuote])
+        if urlString.lowercased().hasPrefix("file://") {
+            urlString.removeFirst("file://".count)
+        }
+        return urlString
     }
 
     func buildInstallerCommand(for pkgURL: String? = nil) -> String {
@@ -443,6 +477,13 @@ class NudgeViewModel: ObservableObject {
         let formatter = DateFormatter()
         formatter.timeZone = .current
         formatter.dateFormat = "yyyy-MM-dd, HH:mm"
+        return formatter.string(from: date)
+    }
+
+    private func iso8601ZuluString(from date: Date) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.formatOptions = [.withInternetDateTime, .withColonSeparatorInTime, .withDashSeparatorInDate]
         return formatter.string(from: date)
     }
 

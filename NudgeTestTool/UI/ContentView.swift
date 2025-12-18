@@ -9,7 +9,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct ContentView: View {
-    @StateObject private var model = NudgeViewModel()
+    @StateObject var model = NudgeViewModel()
     @State private var isShowingFileImporter: Bool = false
     @State private var isShowingInfo: Bool = false
 
@@ -23,6 +23,40 @@ struct ContentView: View {
                 Text("Test Nudge by building a run command, and executing with the play button in the toolbar.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle("Include simulate-date", isOn: $model.includeSimulateDate)
+                        .onChange(of: model.includeSimulateDate) { _ in
+                            model.rebuildCommandPreservingJSONURL()
+                        }
+                    DatePicker("simulate-date", selection: $model.simulateDate, displayedComponents: [.date])
+                        .datePickerStyle(.compact)
+                        .onChange(of: model.simulateDate) { _ in
+                            model.rebuildCommandPreservingJSONURL()
+                        }
+                        .disabled(!model.includeSimulateDate)
+                        .opacity(model.includeSimulateDate ? 1.0 : 0.4)
+
+                    Toggle("Include simulate-os-version", isOn: $model.includeSimulateOSVersion)
+                        .onChange(of: model.includeSimulateOSVersion) { _ in
+                            model.rebuildCommandPreservingJSONURL()
+                        }
+                    HStack {
+                        Text("simulate-os-version")
+                        TextField("", text: $model.simulateOSVersion)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 140)
+                            .onChange(of: model.simulateOSVersion) { _ in
+                                model.rebuildCommandPreservingJSONURL()
+                            }
+                            .disabled(!model.includeSimulateOSVersion)
+                            .opacity(model.includeSimulateOSVersion ? 1.0 : 0.4)
+                    }
+                    Button("Apply to Command") {
+                        model.rebuildCommandPreservingJSONURL()
+                    }
+                    .buttonStyle(.bordered)
+                }
 
                 VStack(alignment: .leading, spacing: 8) {
                     TextEditor(text: $model.commandText)
@@ -273,7 +307,8 @@ struct ContentView: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(.blue)
-                .disabled(model.isExecuting || model.commandText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(model.isExecuting || model.commandText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.selectedJSONPath.isEmpty)
+                .opacity(model.isExecuting || model.commandText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.selectedJSONPath.isEmpty ? 0.5 : 1.0)
             }
         }
         .sheet(isPresented: $isShowingInfo) {
@@ -292,8 +327,8 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            //model.initializeDefaultsIfNeeded()
             model.refreshNudgeInfo()
+            model.initializeDefaultsIfNeeded()
             model.fetchLatestNudgeVersion()
         }
     }
