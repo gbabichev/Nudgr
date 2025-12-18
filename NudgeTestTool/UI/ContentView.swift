@@ -17,9 +17,10 @@ struct ContentView: View {
         HStack(alignment: .top, spacing: 24) {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Command Builder")
-                    .font(.title2.weight(.semibold))
+                    .font(.title3.weight(.semibold))
+                    .frame(maxWidth: .infinity, alignment: .center)
 
-                Text("")
+                Text("Test Nudge by building a run command, and executing with the play button in the toolbar.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
@@ -70,6 +71,8 @@ struct ContentView: View {
                 }
             }
 
+            Divider()
+            
             VStack(alignment: .leading, spacing: 12) {
                 Text("JSON Info")
                     .font(.title3.weight(.semibold))
