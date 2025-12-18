@@ -19,7 +19,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		FF4CE81D2EF2EF9F005CF6FC /* NTestTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NTestTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FF4CE81D2EF2EF9F005CF6FC /* Nudgr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nudgr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -52,7 +52,7 @@
 		FF4CE81E2EF2EF9F005CF6FC /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FF4CE81D2EF2EF9F005CF6FC /* NTestTool.app */,
+				FF4CE81D2EF2EF9F005CF6FC /* Nudgr.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -80,7 +80,7 @@
 			packageProductDependencies = (
 			);
 			productName = NudgeTestTool;
-			productReference = FF4CE81D2EF2EF9F005CF6FC /* NTestTool.app */;
+			productReference = FF4CE81D2EF2EF9F005CF6FC /* Nudgr.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -276,9 +276,10 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.georgebabichev.NudgeTestTool;
-				PRODUCT_NAME = NTestTool;
+				PRODUCT_BUNDLE_IDENTIFIER = com.georgebabichev.Nudgr;
+				PRODUCT_NAME = Nudgr;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -308,9 +309,10 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.georgebabichev.NudgeTestTool;
-				PRODUCT_NAME = NTestTool;
+				PRODUCT_BUNDLE_IDENTIFIER = com.georgebabichev.Nudgr;
+				PRODUCT_NAME = Nudgr;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
