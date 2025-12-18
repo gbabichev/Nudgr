@@ -81,32 +81,30 @@ struct ContentView: View {
                     }
                 }
                 
-                if !model.executionOutput.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Output / Log")
-                            .font(.headline)
-                        ScrollView {
-                            Text(model.executionOutput)
-                                .font(.system(.body, design: .monospaced))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .frame(maxHeight: 200)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Output / Log")
+                        .font(.headline)
+                    ScrollView {
+                        Text(model.executionOutput)
+                            .font(.system(.body, design: .monospaced))
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .frame(maxHeight: 200)
                 }
                 
-                if !model.executionError.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Error")
-                            .font(.headline)
-                        ScrollView {
-                            Text(model.executionError)
-                                .font(.system(.body, design: .monospaced))
-                                .foregroundStyle(.red)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .frame(maxHeight: 200)
-                    }
-                }
+//                if !model.executionError.isEmpty {
+//                    VStack(alignment: .leading, spacing: 4) {
+//                        Text("Error")
+//                            .font(.headline)
+//                        ScrollView {
+//                            Text(model.executionError)
+//                                .font(.system(.body, design: .monospaced))
+//                                .foregroundStyle(.red)
+//                                .frame(maxWidth: .infinity, alignment: .leading)
+//                        }
+//                        .frame(maxHeight: 200)
+//                    }
+//                }
             }
             
             Divider()

@@ -22,36 +22,9 @@
 		FF4CE81D2EF2EF9F005CF6FC /* NTestTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NTestTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		FF4CE82E2EF2F04B005CF6FC /* Exceptions for "NudgeTestTool" folder in "NudgeTestTool" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"Reference/patch-latest.json",
-			);
-			target = FF4CE81C2EF2EF9F005CF6FC /* NudgeTestTool */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-		FF4CE8312EF2F0D6005CF6FC /* Exceptions for "NudgeTestTool" folder in "Copy Files" phase from "NudgeTestTool" target */ = {
-			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
-			attributesByRelativePath = {
-				"Reference/patch-latest.json" = (CodeSignOnCopy, );
-			};
-			buildPhase = FF4CE82F2EF2F0CC005CF6FC /* CopyFiles */;
-			membershipExceptions = (
-				"Reference/patch-latest.json",
-			);
-		};
-/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		FF4CE81F2EF2EF9F005CF6FC /* NudgeTestTool */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				FF4CE82E2EF2F04B005CF6FC /* Exceptions for "NudgeTestTool" folder in "NudgeTestTool" target */,
-				FF4CE8312EF2F0D6005CF6FC /* Exceptions for "NudgeTestTool" folder in "Copy Files" phase from "NudgeTestTool" target */,
-			);
 			path = NudgeTestTool;
 			sourceTree = "<group>";
 		};
