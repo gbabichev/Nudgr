@@ -19,7 +19,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		FF4CE81D2EF2EF9F005CF6FC /* NudgeTestTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NudgeTestTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FF4CE81D2EF2EF9F005CF6FC /* NTestTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NTestTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -79,7 +79,7 @@
 		FF4CE81E2EF2EF9F005CF6FC /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FF4CE81D2EF2EF9F005CF6FC /* NudgeTestTool.app */,
+				FF4CE81D2EF2EF9F005CF6FC /* NTestTool.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -107,7 +107,7 @@
 			packageProductDependencies = (
 			);
 			productName = NudgeTestTool;
-			productReference = FF4CE81D2EF2EF9F005CF6FC /* NudgeTestTool.app */;
+			productReference = FF4CE81D2EF2EF9F005CF6FC /* NTestTool.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -305,7 +305,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.georgebabichev.NudgeTestTool;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = NTestTool;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -337,7 +337,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.georgebabichev.NudgeTestTool;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = NTestTool;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
