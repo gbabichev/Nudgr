@@ -300,7 +300,6 @@ struct ContentView: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(.red)
-                .disabled(model.isExecuting)
                 
                 Button {
                     model.runCommand()

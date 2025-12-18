@@ -141,6 +141,9 @@ class NudgeViewModel: ObservableObject {
         commandText = buildCommand(jsonPath: resolvedURL.path)
         appendLog("Selected JSON: \(resolvedURL.lastPathComponent)")
         parseConfig(at: resolvedURL)
+        if isSOFAEnabled {
+            fetchSOFAFeed()
+        }
     }
 
     func buildCommand(jsonPath: String) -> String {
