@@ -21,6 +21,18 @@ struct NudgeInfoSheet: View {
             Text("Version: \(model.nudgeInstalled ? model.nudgeVersion : "n/a")")
             Text("Path: \(model.nudgeInstalled ? model.nudgePath : "n/a")")
             
+            if !model.nudgeDetectionLog.isEmpty {
+                Text("Detection Log")
+                    .bold()
+                ScrollView {
+                    Text(model.nudgeDetectionLog)
+                        .font(.system(.footnote, design: .monospaced))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: 120)
+                .padding(.top, 4)
+            }
+            
             // GitHub data
             Divider()
             
@@ -143,11 +155,11 @@ Divider()
             TextField("Terminal Commands Shown Here", text: $model.latestSuiteURL)
                 .textFieldStyle(.roundedBorder)
             
-//            if !model.latestSuiteError.isEmpty {
-//                Text("Suite fetch error: \(model.latestSuiteError)")
-//                    .foregroundStyle(.red)
-//                    .font(.footnote)
-//            }
+            if !model.latestSuiteError.isEmpty {
+                Text("Suite fetch error: \(model.latestSuiteError)")
+                    .foregroundStyle(.red)
+                    .font(.footnote)
+            }
             
 
             

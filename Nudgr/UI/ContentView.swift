@@ -91,20 +91,6 @@ struct ContentView: View {
                     }
                     .frame(maxHeight: 200)
                 }
-                
-//                if !model.executionError.isEmpty {
-//                    VStack(alignment: .leading, spacing: 4) {
-//                        Text("Error")
-//                            .font(.headline)
-//                        ScrollView {
-//                            Text(model.executionError)
-//                                .font(.system(.body, design: .monospaced))
-//                                .foregroundStyle(.red)
-//                                .frame(maxWidth: .infinity, alignment: .leading)
-//                        }
-//                        .frame(maxHeight: 200)
-//                    }
-//                }
             }
             
             Divider()
@@ -131,23 +117,26 @@ struct ContentView: View {
                     }
                 }
                 
-                if let config = model.parsedConfig {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Parsed JSON")
-                            .font(.headline)
-                        if let useSOFA = config.optionalFeatures?.utilizeSOFAFeed {
-                            Text("Utilize SOFA Feed: \(useSOFA ? "true" : "false")")
-                        } else {
-                            Text("Utilize SOFA Feed: not set")
-                                .foregroundStyle(.secondary)
+                    if let config = model.parsedConfig {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Parsed JSON")
+                                .font(.headline)
+                            if let useSOFA = config.optionalFeatures?.utilizeSOFAFeed {
+                                Text("Utilize SOFA Feed: \(useSOFA ? "true" : "false")")
+                            } else {
+                                Text("Utilize SOFA Feed: not set")
+                                    .foregroundStyle(.secondary)
+                            }
+                            if let requirement = config.osVersionRequirements.first {
+                                Text("Required Minimum OS: \(requirement.requiredMinimumOSVersion)")
+                                if let rule = requirement.targetedOSVersionsRule, !rule.isEmpty {
+                                    Text("Targeted OS Rule: \(rule)")
+                                }
+                            } else {
+                                Text("No osVersionRequirements found.")
+                                    .foregroundStyle(.secondary)
+                            }
                         }
-                        if let requirement = config.osVersionRequirements.first {
-                            Text("Required Minimum OS: \(requirement.requiredMinimumOSVersion)")
-                        } else {
-                            Text("No osVersionRequirements found.")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
                 } else if !model.parseError.isEmpty {
                     Text("Parse error: \(model.parseError)")
                         .foregroundStyle(.red)
@@ -187,6 +176,11 @@ struct ContentView: View {
                                     .font(.headline)
                                 Text("Release Date: \(majors.latest?.releaseDate ?? "n/a")")
                                 Text("Actively Exploited CVEs: \(majors.latest?.activelyExploitedCount ?? 0)")
+                                if let list = majors.latest?.activelyExploitedList, !list.isEmpty {
+                                    Text("List: \(list.joined(separator: ", "))")
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             
@@ -197,6 +191,11 @@ struct ContentView: View {
                                     .font(.headline)
                                 Text("Release Date: \(majors.previous?.releaseDate ?? "n/a")")
                                 Text("Actively Exploited CVEs: \(majors.previous?.activelyExploitedCount ?? 0)")
+                                if let list = majors.previous?.activelyExploitedList, !list.isEmpty {
+                                    Text("List: \(list.joined(separator: ", "))")
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -219,8 +218,11 @@ struct ContentView: View {
                     Text("Required Install By")
                         .font(.title3.weight(.semibold))
                         .frame(maxWidth: .infinity, alignment: .center)
-                    
-                    if model.isSOFAEnabled, let majors = model.sofaMajorDetails() {
+                    if model.selectedJSONPath.isEmpty {
+                        Text("Select a JSON file to view requirement summaries.")
+                            .foregroundStyle(.secondary)
+                            .font(.footnote)
+                    } else if model.isSOFAEnabled, let majors = model.sofaMajorDetails() {
                         HStack(alignment: .top, spacing: 16) {
                             if let latest = majors.latest {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -331,13 +333,14 @@ struct ContentView: View {
                     model.handleJSONSelection(url: url)
                 }
             case .failure(let error):
-                model.executionError = error.localizedDescription
+                model.appendLog("File selection failed: \(error.localizedDescription)")
             }
         }
                       .onAppear {
                           model.refreshNudgeInfo()
                           model.initializeDefaultsIfNeeded()
                           model.fetchLatestNudgeVersion()
+                          model.fetchSOFAFeed()
                       }
     }
 }

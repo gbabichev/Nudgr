@@ -7,7 +7,6 @@ class NudgeViewModel: ObservableObject {
     @Published var commandText: String = ""
     @Published var isExecuting: Bool = false
     @Published var executionOutput: String = ""
-    @Published var executionError: String = ""
     @Published var activityLog: String = ""
 
     @Published var selectedJSONPath: String = ""
@@ -51,14 +50,17 @@ class NudgeViewModel: ObservableObject {
 
         isExecuting = true
         executionOutput = ""
-        executionError = ""
         appendLog("Executing: \(command)")
 
         Task.detached(priority: .userInitiated) { [command] in
             let result = await ShellExecutor.shared.run(command: command)
             await MainActor.run {
-                self.executionOutput = result.output
-                self.executionError = result.error
+                if !result.output.isEmpty {
+                    self.appendLog(result.output)
+                }
+                if !result.error.isEmpty {
+                    self.appendLog("Note: \(result.error)")
+                }
                 self.appendLog("Execution complete.")
                 self.isExecuting = false
             }
@@ -68,14 +70,16 @@ class NudgeViewModel: ObservableObject {
     func killNudge() {
         isExecuting = true
         executionOutput = ""
-        executionError = ""
         appendLog("Attempting to kill Nudge by bundle id.")
 
         Task.detached(priority: .userInitiated) {
             let result = await NudgeProcessManager.shared.killNudge()
             await MainActor.run {
-                self.executionOutput = result.output.isEmpty ? "Sent terminate to Nudge.app (if running)." : result.output
-                self.executionError = result.error
+                let message = result.output.isEmpty ? "Sent terminate to Nudge.app (if running)." : result.output
+                self.appendLog(message)
+                if !result.error.isEmpty {
+                    self.appendLog("Note: \(result.error)")
+                }
                 self.appendLog("Kill attempt finished.")
                 self.isExecuting = false
             }
@@ -114,19 +118,6 @@ class NudgeViewModel: ObservableObject {
                 latestNudgeError = error.localizedDescription
                 isFetchingLatestNudge = false
                 print("Latest Nudge fetch failed: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    func fetchLatestSuiteURL() {
-        latestSuiteError = ""
-        Task {
-            do {
-                let url = try await NudgeReleaseService.latestSuiteDownloadURL()
-                latestSuiteDownloadURL = url
-                latestSuiteURL = url
-            } catch {
-                latestSuiteError = error.localizedDescription
             }
         }
     }
@@ -205,10 +196,6 @@ class NudgeViewModel: ObservableObject {
         return #"sudo rm -rf "/Applications/Utilities/Nudge.app" && launchctl unload /Library/LaunchAgents/com.github.macadmins.Nudge.plist 2>/dev/null && sudo pkgutil --forget com.github.macadmins.Nudge.Suite && sudo pkgutil --forget com.github.macadmins.Nudge"#
     }
 
-    func defaultJSONPath() -> String {
-        Bundle.main.url(forResource: "patch-latest", withExtension: "json")?.path ?? "patch-latest.json"
-    }
-
     func fetchSOFAFeed() {
         isFetchingSOFA = true
         sofaError = ""
@@ -217,7 +204,77 @@ class NudgeViewModel: ObservableObject {
                 let feed = try await SOFAFeedService.fetch()
                 sofaFeed = feed
                 isFetchingSOFA = false
-                appendLog("Fetched SOFA feed.")
+                let lastCheck = feed.lastCheck ?? "n/a"
+                let xprotectPlist = feed.xProtectPlistConfigData?.releaseDate ?? "n/a"
+                let xprotectPlistHash = feed.xProtectPlistConfigData?.comAppleXProtect ?? "n/a"
+                let xprotectPayloads = feed.xProtectPayloads?.releaseDate ?? "n/a"
+                let xprotectPayloadsService = feed.xProtectPayloads?.pluginService ?? "n/a"
+                let xprotectPayloadsVersion = feed.xProtectPayloads?.xProtect ?? "n/a"
+                let installationApp = feed.installationApps?.latestUMA?.title ?? "n/a"
+                let installationAppVersion = feed.installationApps?.latestUMA?.version ?? "n/a"
+                let installationAppBuild = feed.installationApps?.latestUMA?.build ?? "n/a"
+                let installationAppSlug = feed.installationApps?.latestUMA?.appleSlug ?? "n/a"
+                let installationAppURL = feed.installationApps?.latestUMA?.url ?? "n/a"
+                let installationAppPosted = feed.installationApps?.latestUMA?.postingDate ?? "n/a"
+                let installationAppSize = feed.installationApps?.latestUMA?.size.map(String.init) ?? "n/a"
+                let previousUMA = feed.installationApps?.allPreviousUMA?.compactMap { app in
+                    guard let title = app.title else { return nil }
+                    let slug = app.appleSlug ?? "n/a"
+                    return "\(title) (\(slug))"
+                }.joined(separator: ", ") ?? "n/a"
+                let ipsw = feed.installationApps?.latestMacIPSW?.version ?? "n/a"
+                let ipswURL = feed.installationApps?.latestMacIPSW?.url ?? "n/a"
+                let ipswBuild = feed.installationApps?.latestMacIPSW?.build ?? "n/a"
+                let ipswSlug = feed.installationApps?.latestMacIPSW?.appleSlug ?? "n/a"
+                let securityReleasesCount = feed.osVersions.compactMap { $0.securityReleases?.count }.reduce(0, +)
+                let supportedModelCount = feed.osVersions.compactMap { $0.supportedModels?.count }.reduce(0, +)
+                let latestUpdateName = feed.osVersions.first?.latest?.updateName ?? "n/a"
+                let latestRelease = feed.osVersions.first?.latest
+                let productName = latestRelease?.productName ?? "n/a"
+                let build = latestRelease?.build ?? "n/a"
+                let allBuilds = latestRelease?.allBuilds?.joined(separator: ", ") ?? "n/a"
+                let expirationDate = latestRelease?.expirationDate ?? "n/a"
+                let releaseType = latestRelease?.releaseType ?? "n/a"
+                let securityInfo = latestRelease?.securityInfo ?? "n/a"
+                let securityInfoContext = latestRelease?.securityInfoContext ?? "n/a"
+                let supportedDevices = latestRelease?.supportedDevices?.joined(separator: ", ") ?? "n/a"
+                let daysSincePrevious = latestRelease?.daysSincePreviousRelease.map(String.init) ?? "n/a"
+                let summaryPriority = latestRelease?.updateSummary?.priority ?? "n/a"
+                let summaryText = latestRelease?.updateSummary?.summary ?? "n/a"
+                let summaryRecommendation = latestRelease?.updateSummary?.recommendation ?? "n/a"
+                let stats = latestRelease?.updateSummary?.stats
+                let statSummary: String
+                if let stats {
+                    let parts: [String] = [
+                        stats.exploited.map { "exploited \($0)" },
+                        stats.critical.map { "critical \($0)" },
+                        stats.high.map { "high \($0)" },
+                        stats.medium.map { "medium \($0)" },
+                        stats.low.map { "low \($0)" },
+                        stats.remote.map { "remote \($0)" },
+                        stats.total.map { "total \($0)" }
+                    ].compactMap { $0 }
+                    statSummary = parts.isEmpty ? "n/a" : parts.joined(separator: ", ")
+                } else {
+                    statSummary = "n/a"
+                }
+                let cveSample: String
+                if let entry = latestRelease?.cves?.first {
+                    let key = entry.key
+                    let info = entry.value
+                    let sev = info.severity ?? "n/a"
+                    let exploited = (info.activelyExploited ?? false) ? "yes" : "no"
+                    let kev = (info.inKEV ?? false) ? "yes" : "no"
+                    let url = info.nistURL ?? "n/a"
+                    cveSample = "\(key) (severity \(sev), exploited \(exploited), KEV \(kev), nist \(url))"
+                } else {
+                    cveSample = "n/a"
+                }
+                appendLog("""
+Fetched SOFA feed (version \(feed.version), hash \(feed.updateHash), last check \(lastCheck)).
+XProtect plist: \(xprotectPlist) (hash \(xprotectPlistHash)), XProtect payloads: \(xprotectPayloads) (service \(xprotectPayloadsService), version \(xprotectPayloadsVersion)), Installation app: \(installationApp) (v\(installationAppVersion), build \(installationAppBuild), slug \(installationAppSlug), url \(installationAppURL), posted \(installationAppPosted), size \(installationAppSize)), Previous UMA: \(previousUMA), IPSW version: \(ipsw) (build \(ipswBuild), slug \(ipswSlug), url \(ipswURL)), Security releases: \(securityReleasesCount), Supported models: \(supportedModelCount), Latest update name: \(latestUpdateName).
+Release details — product: \(productName), build: \(build), all builds: \(allBuilds), expiration: \(expirationDate), type: \(releaseType), security info: \(securityInfo), context: \(securityInfoContext), supported devices: \(supportedDevices), days since prev: \(daysSincePrevious), summary priority: \(summaryPriority), summary: \(summaryText), recommendation: \(summaryRecommendation), stats: \(statSummary), sample CVE: \(cveSample).
+""")
             } catch {
                 sofaError = error.localizedDescription
                 isFetchingSOFA = false
