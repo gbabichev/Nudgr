@@ -14,6 +14,17 @@ struct NudgeInfoSheet: View {
             Text("Installed: \(model.nudgeInstalled ? "Yes" : "No")")
             Text("Version: \(model.nudgeInstalled ? model.nudgeVersion : "n/a")")
             Text("Path: \(model.nudgeInstalled ? model.nudgePath : "n/a")")
+            if model.nudgeInstalled {
+                Button {
+                    let cmd = model.buildUninstallCommand()
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(cmd, forType: .string)
+                    triggerToast("Copied uninstall command")
+                } label: {
+                    Label("Copy Uninstall Command", systemImage: "trash")
+                }
+                .buttonStyle(.bordered)
+            }
             
             Button {
                 model.refreshNudgeInfo()

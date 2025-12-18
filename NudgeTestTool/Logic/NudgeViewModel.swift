@@ -128,15 +128,6 @@ class NudgeViewModel: ObservableObject {
         }
     }
 
-    func ensureSuiteURLAndInstallerCommand() async throws -> String {
-        if latestSuiteDownloadURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let url = try await NudgeReleaseService.latestSuiteDownloadURL()
-            latestSuiteDownloadURL = url
-            latestSuiteURL = url
-        }
-        return buildInstallerCommand()
-    }
-
     func handleJSONSelection(url: URL) {
         let resolvedURL = url
         if resolvedURL.startAccessingSecurityScopedResource() {
@@ -156,11 +147,25 @@ class NudgeViewModel: ObservableObject {
 
     func buildInstallerCommand(for pkgURL: String? = nil) -> String {
         let candidate = pkgURL?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmed = (candidate?.isEmpty == false ? candidate! : latestSuiteDownloadURL).trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedSource = (candidate?.isEmpty == false ? candidate! : latestSuiteDownloadURL)
+        let trimmed = trimmedSource.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             return #"curl -L "<pkg_url>" -o /tmp/Nudge_Suite.pkg && sudo installer -pkg /tmp/Nudge_Suite.pkg -target /"#
         }
         return #"curl -L "\#(trimmed)" -o /tmp/Nudge_Suite.pkg && sudo installer -pkg /tmp/Nudge_Suite.pkg -target /"#
+    }
+
+    func ensureSuiteURLAndInstallerCommand() async throws -> String {
+        if latestSuiteDownloadURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let url = try await NudgeReleaseService.latestSuiteDownloadURL()
+            latestSuiteDownloadURL = url
+            latestSuiteURL = url
+        }
+        return buildInstallerCommand()
+    }
+
+    func buildUninstallCommand() -> String {
+        return #"sudo rm -rf "/Applications/Utilities/Nudge.app" && launchctl unload /Library/LaunchAgents/com.github.macadmins.Nudge.plist 2>/dev/null && sudo pkgutil --forget com.github.macadmins.Nudge.Suite && sudo pkgutil --forget com.github.macadmins.Nudge"#
     }
 
     func defaultJSONPath() -> String {
