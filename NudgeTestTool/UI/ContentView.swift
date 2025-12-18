@@ -265,6 +265,7 @@ struct ContentView: View {
                 Spacer()
             }
         }
+        .frame(minWidth: 700, minHeight: 520)
         .padding(24)
         .toolbar {
             ToolbarItemGroup(placement: .navigation) {
