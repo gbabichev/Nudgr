@@ -29,7 +29,7 @@ class NudgeViewModel: ObservableObject {
     @Published var latestSuiteURL: String = ""
     @Published var latestSuiteError: String = ""
     @AppStorage("simulateDate") var simulateDate: Date = Calendar(identifier: .gregorian).startOfDay(for: Date())
-    @AppStorage("simulateOSVersion") var simulateOSVersion: String = "26.0"
+    @AppStorage("simulateOSVersion") var simulateOSVersion: String = ""
     @AppStorage("includeSimulateDate") var includeSimulateDate: Bool = true
     @AppStorage("includeSimulateOSVersion") var includeSimulateOSVersion: Bool = true
 

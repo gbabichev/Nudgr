@@ -12,52 +12,56 @@ struct ContentView: View {
     @StateObject var model = NudgeViewModel()
     @State private var isShowingFileImporter: Bool = false
     @State private var isShowingInfo: Bool = false
-
+    
     var body: some View {
         HStack(alignment: .top, spacing: 24) {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Command Builder")
                     .font(.title3.weight(.semibold))
                     .frame(maxWidth: .infinity, alignment: .center)
-
+                
                 Text("Test Nudge by building a run command, and executing with the play button in the toolbar.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-
+                
                 VStack(alignment: .leading, spacing: 8) {
-                    Toggle("Include simulate-date", isOn: $model.includeSimulateDate)
-                        .onChange(of: model.includeSimulateDate) { _ in
-                            model.rebuildCommandPreservingJSONURL()
-                        }
-                    DatePicker("simulate-date", selection: $model.simulateDate, displayedComponents: [.date])
+                    
+                    SettingsRow("Include simulate-date", subtitle: "Simulate the current date.") {
+                        Toggle("", isOn: $model.includeSimulateDate)
+                            .toggleStyle(.switch)
+                            .onChange(of: model.includeSimulateDate) { _,_ in
+                                model.rebuildCommandPreservingJSONURL()
+                            }
+                    }
+                    
+                    DatePicker("Date to simulate:", selection: $model.simulateDate, displayedComponents: [.date])
                         .datePickerStyle(.compact)
-                        .onChange(of: model.simulateDate) { _ in
+                        .onChange(of: model.simulateDate) { _,_ in
                             model.rebuildCommandPreservingJSONURL()
                         }
                         .disabled(!model.includeSimulateDate)
                         .opacity(model.includeSimulateDate ? 1.0 : 0.4)
-
-                    Toggle("Include simulate-os-version", isOn: $model.includeSimulateOSVersion)
-                        .onChange(of: model.includeSimulateOSVersion) { _ in
-                            model.rebuildCommandPreservingJSONURL()
-                        }
-                    HStack {
-                        Text("simulate-os-version")
-                        TextField("", text: $model.simulateOSVersion)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 140)
-                            .onChange(of: model.simulateOSVersion) { _ in
+                    
+                    Divider()
+                    
+                    SettingsRow("Include simulate-os-version", subtitle: "Simulate the current OS Version.") {
+                        Toggle("", isOn: $model.includeSimulateOSVersion)
+                            .toggleStyle(.switch)
+                            .onChange(of: model.includeSimulateOSVersion) { _,_ in
                                 model.rebuildCommandPreservingJSONURL()
                             }
-                            .disabled(!model.includeSimulateOSVersion)
-                            .opacity(model.includeSimulateOSVersion ? 1.0 : 0.4)
                     }
-                    Button("Apply to Command") {
-                        model.rebuildCommandPreservingJSONURL()
-                    }
-                    .buttonStyle(.bordered)
+                    
+                    TextField("OS Version", text: $model.simulateOSVersion)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 140)
+                        .onChange(of: model.simulateOSVersion) { _,_ in
+                            model.rebuildCommandPreservingJSONURL()
+                        }
+                        .disabled(!model.includeSimulateOSVersion)
+                        .opacity(model.includeSimulateOSVersion ? 1.0 : 0.4)
                 }
-
+                            
                 VStack(alignment: .leading, spacing: 8) {
                     TextEditor(text: $model.commandText)
                         .frame(minHeight: 80)
@@ -68,7 +72,7 @@ struct ContentView: View {
                         .font(.system(.body, design: .monospaced))
                         .padding(.horizontal, -4)
                 }
-
+                
                 if model.isExecuting {
                     HStack(spacing: 8) {
                         ProgressView()
@@ -76,7 +80,7 @@ struct ContentView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-
+                
                 if !model.executionOutput.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Output / Log")
@@ -89,7 +93,7 @@ struct ContentView: View {
                         .frame(maxHeight: 200)
                     }
                 }
-
+                
                 if !model.executionError.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Error")
@@ -104,14 +108,14 @@ struct ContentView: View {
                     }
                 }
             }
-
+            
             Divider()
             
             VStack(alignment: .leading, spacing: 12) {
                 Text("JSON Info")
                     .font(.title3.weight(.semibold))
                     .frame(maxWidth: .infinity, alignment: .center)
-
+                
                 VStack(alignment: .leading, spacing: 8) {
                     if !model.selectedJSONPath.isEmpty {
                         Text("Selected: \(model.selectedJSONPath)")
@@ -128,7 +132,7 @@ struct ContentView: View {
                             .truncationMode(.middle)
                     }
                 }
-
+                
                 if let config = model.parsedConfig {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Parsed JSON")
@@ -151,10 +155,10 @@ struct ContentView: View {
                         .foregroundStyle(.red)
                         .font(.footnote)
                 }
-
+                
                 Divider()
                     .padding(.vertical, 4)
-
+                
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text("SOFA Feed")
@@ -177,7 +181,7 @@ struct ContentView: View {
                         Text("SOFA is not enabled in the selected JSON file.")
                             .foregroundStyle(.red)
                     }
-
+                    
                     if let majors = model.sofaMajorDetails() {
                         HStack(alignment: .top, spacing: 16) {
                             VStack(alignment: .leading, spacing: 4) {
@@ -187,9 +191,9 @@ struct ContentView: View {
                                 Text("Actively Exploited CVEs: \(majors.latest?.activelyExploitedCount ?? 0)")
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
-
+                            
                             Divider()
-
+                            
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Previous Major (\(majors.previous?.productVersion ?? "n/a"))")
                                     .font(.headline)
@@ -211,13 +215,13 @@ struct ContentView: View {
                 
                 Divider()
                     .padding(.vertical, 4)
-
-
+                
+                
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Required Install By")
                         .font(.title3.weight(.semibold))
                         .frame(maxWidth: .infinity, alignment: .center)
-
+                    
                     if model.isSOFAEnabled, let majors = model.sofaMajorDetails() {
                         HStack(alignment: .top, spacing: 16) {
                             if let latest = majors.latest {
@@ -257,7 +261,7 @@ struct ContentView: View {
                             .font(.footnote)
                     }
                 }
-
+                
                 Spacer()
             }
         }
@@ -271,7 +275,7 @@ struct ContentView: View {
                 }
                 .buttonStyle(.bordered)
             }
-
+            
             ToolbarItemGroup(placement: .status) {
                 Button {
                     isShowingInfo = true
@@ -286,7 +290,7 @@ struct ContentView: View {
                 .buttonStyle(.bordered)
                 .tint(model.nudgeInstalled ? .accentColor : .yellow)
             }
-
+            
             ToolbarItemGroup(placement: .primaryAction) {
                 Button {
                     model.killNudge()
@@ -297,7 +301,7 @@ struct ContentView: View {
                 .buttonStyle(.bordered)
                 .tint(.red)
                 .disabled(model.isExecuting)
-
+                
                 Button {
                     model.runCommand()
                 } label: {
@@ -326,10 +330,10 @@ struct ContentView: View {
                 model.executionError = error.localizedDescription
             }
         }
-        .onAppear {
-            model.refreshNudgeInfo()
-            model.initializeDefaultsIfNeeded()
-            model.fetchLatestNudgeVersion()
-        }
+                      .onAppear {
+                          model.refreshNudgeInfo()
+                          model.initializeDefaultsIfNeeded()
+                          model.fetchLatestNudgeVersion()
+                      }
     }
 }
