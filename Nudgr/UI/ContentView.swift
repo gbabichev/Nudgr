@@ -163,6 +163,12 @@ struct ContentView: View {
                         .buttonStyle(.bordered)
                         .disabled(model.isFetchingSOFA)
                     }
+
+                    if !model.sofaError.isEmpty {
+                        Text("SOFA warning: \(model.sofaError)")
+                            .foregroundStyle(.red)
+                            .font(.footnote)
+                    }
                     
                     if !model.isSOFAEnabled {
                         Text("SOFA is not enabled in the selected JSON file.")
@@ -199,10 +205,6 @@ struct ContentView: View {
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                    } else if !model.sofaError.isEmpty {
-                        Text("SOFA error: \(model.sofaError)")
-                            .foregroundStyle(.red)
-                            .font(.footnote)
                     } else {
                         Text("No SOFA data loaded.")
                             .foregroundStyle(.secondary)

@@ -201,9 +201,15 @@ class NudgeViewModel: ObservableObject {
         sofaError = ""
         Task {
             do {
-                let feed = try await SOFAFeedService.fetch()
+                let (feed, source) = try await SOFAFeedService.fetch()
                 sofaFeed = feed
                 isFetchingSOFA = false
+                switch source {
+                case .network:
+                    sofaError = ""
+                case .cache(let error):
+                    sofaError = error.localizedDescription
+                }
                 let lastCheck = feed.lastCheck ?? "n/a"
                 let xprotectPlist = feed.xProtectPlistConfigData?.releaseDate ?? "n/a"
                 let xprotectPlistHash = feed.xProtectPlistConfigData?.comAppleXProtect ?? "n/a"
