@@ -21,6 +21,8 @@ struct OSVersionRequirement: Decodable {
 struct OptionalFeatures: Decodable {
     let utilizeSOFAFeed: Bool?
     let disableNudgeForStandardInstalls: Bool?
+    let aggressiveUserExperience: Bool?
+    let aggressiveUserFullScreenExperience: Bool?
 }
 
 struct UserExperience: Decodable {

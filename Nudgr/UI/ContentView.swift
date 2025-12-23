@@ -132,6 +132,18 @@ struct ContentView: View {
                                 if let rule = requirement.targetedOSVersionsRule, !rule.isEmpty {
                                     Text("Targeted OS Rule: \(rule)")
                                 }
+                                if let aggressive = config.optionalFeatures?.aggressiveUserExperience {
+                                    Text("Aggressive User Experience: \(aggressive ? "true" : "false")")
+                                } else {
+                                    Text("Aggressive User Experience: not set")
+                                        .foregroundStyle(.secondary)
+                                }
+                                if let fullscreen = config.optionalFeatures?.aggressiveUserFullScreenExperience {
+                                    Text("Aggressive Full Screen Experience: \(fullscreen ? "true" : "false")")
+                                } else {
+                                    Text("Aggressive Full Screen Experience: not set")
+                                        .foregroundStyle(.secondary)
+                                }
                             } else {
                                 Text("No osVersionRequirements found.")
                                     .foregroundStyle(.secondary)
