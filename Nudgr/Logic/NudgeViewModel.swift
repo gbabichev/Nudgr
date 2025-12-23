@@ -317,6 +317,7 @@ Release details — product: \(productName), build: \(build), all builds: \(allB
             guard let entry = entries.first(where: { $0.latest != nil }) else { return nil }
             guard let release = entry.latest else { return nil }
             let exploitedList = release.activelyExploitedCVEs ?? []
+            let hasAnyCVE = (release.uniqueCVEsCount ?? 0) > 0 || !(release.cves ?? [:]).isEmpty
             let dates = computeDates(for: release)
             return SOFAMajorSummary(
                 major: major,
@@ -324,6 +325,7 @@ Release details — product: \(productName), build: \(build), all builds: \(allB
                 releaseDate: release.releaseDate ?? "n/a",
                 activelyExploitedCount: exploitedList.count,
                 activelyExploitedList: exploitedList,
+                hasAnyCVE: hasAnyCVE,
                 requiredInstallDate: dates.requiredInstallDate,
                 nudgeLaunchDate: dates.nudgeLaunchDate
             )
@@ -351,6 +353,79 @@ Release details — product: \(productName), build: \(build), all builds: \(allB
         return (latest: latest, previous: previous)
     }
 
+    enum SLAScenario {
+        case standard
+        case nonActive
+        case active
+    }
+
+    struct SLAKickoffSummary {
+        let source: String
+        let releaseDate: String
+        let standard: String
+        let nonActive: String
+        let active: String
+        let highlight: SLAScenario?
+    }
+
+    func slaKickoffSummary() -> SLAKickoffSummary? {
+        guard let requirement = parsedConfig?.osVersionRequirements.first else { return nil }
+        let defaults = (standard: 28, nonActive: 21, active: 14)
+
+        let calendar = Calendar(identifier: .gregorian)
+        let optional = parsedConfig?.optionalFeatures
+
+        let releaseDate: Date
+        let releaseDateLabel: String
+        let isMajorUpdate: Bool
+        let usedSOFA: Bool
+        let highlightScenario: SLAScenario?
+        if isSOFAEnabled,
+           let summary = selectSOFASummaryForRequirement(requirement),
+           let parsedRelease = parseISODate(summary.releaseDate) {
+            releaseDate = parsedRelease
+            releaseDateLabel = isoLocalString(from: parsedRelease)
+            isMajorUpdate = isMajorRelease(summary.productVersion)
+            usedSOFA = true
+            highlightScenario = scenarioFromSOFASummary(summary)
+        } else {
+            return nil
+        }
+
+        let standardDays = isMajorUpdate
+        ? (requirement.standardMajorUpgradeSLA ?? defaults.standard)
+        : (requirement.standardMinorUpdateSLA ?? defaults.standard)
+        let nonActiveDays = isMajorUpdate
+        ? (requirement.nonActivelyExploitedCVEsMajorUpgradeSLA ?? defaults.nonActive)
+        : (requirement.nonActivelyExploitedCVEsMinorUpdateSLA ?? defaults.nonActive)
+        let activeDays = isMajorUpdate
+        ? (requirement.activelyExploitedCVEsMajorUpgradeSLA ?? defaults.active)
+        : (requirement.activelyExploitedCVEsMinorUpdateSLA ?? defaults.active)
+
+        let standardDate: String
+        if optional?.disableNudgeForStandardInstalls == true {
+            standardDate = "disabled"
+        } else {
+            standardDate = calendar.date(byAdding: .day, value: standardDays, to: releaseDate)
+                .map(isoLocalString) ?? "n/a"
+        }
+
+        let nonActiveDate = calendar.date(byAdding: .day, value: nonActiveDays, to: releaseDate)
+            .map(isoLocalString) ?? "n/a"
+        let activeDate = calendar.date(byAdding: .day, value: activeDays, to: releaseDate)
+            .map(isoLocalString) ?? "n/a"
+
+        let source = usedSOFA ? "SOFA" : "Local"
+        return SLAKickoffSummary(
+            source: source,
+            releaseDate: releaseDateLabel,
+            standard: standardDate,
+            nonActive: nonActiveDate,
+            active: activeDate,
+            highlight: highlightScenario
+        )
+    }
+
     func localRequirementSummary() -> LocalRequirementSummary? {
         guard let requirement = parsedConfig?.osVersionRequirements.first else { return nil }
         let requiredDate = requirement.requiredInstallationDate.flatMap { parseISODate($0) }
@@ -368,6 +443,34 @@ Release details — product: \(productName), build: \(build), all builds: \(allB
             nudgeLaunchDate: launchString,
             highlight: highlight
         )
+    }
+
+    private func selectSOFASummaryForRequirement(_ requirement: OSVersionRequirement) -> SOFAMajorSummary? {
+        guard let summaries = sofaMajorDetails() else { return nil }
+        let req = requirement.requiredMinimumOSVersion.lowercased()
+        if req == "latest" {
+            return summaries.latest
+        }
+        if req == "latest-minor" {
+            return summaries.previous ?? summaries.latest
+        }
+        if let latest = summaries.latest, latest.productVersion.lowercased() == req {
+            return latest
+        }
+        if let previous = summaries.previous, previous.productVersion.lowercased() == req {
+            return previous
+        }
+        return summaries.latest ?? summaries.previous
+    }
+
+    private func scenarioFromSOFASummary(_ summary: SOFAMajorSummary) -> SLAScenario {
+        if !summary.activelyExploitedList.isEmpty || summary.activelyExploitedCount > 0 {
+            return .active
+        }
+        if summary.hasAnyCVE {
+            return .nonActive
+        }
+        return .standard
     }
 
     private func detectNudge() -> (installed: Bool, path: String, version: String, log: String) {

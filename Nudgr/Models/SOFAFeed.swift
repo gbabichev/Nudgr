@@ -177,6 +177,7 @@ struct SOFAMajorSummary {
     let releaseDate: String
     let activelyExploitedCount: Int
     let activelyExploitedList: [String]
+    let hasAnyCVE: Bool
     let requiredInstallDate: String?
     let nudgeLaunchDate: String?
     var highlight: Bool = false

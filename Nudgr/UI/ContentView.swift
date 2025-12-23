@@ -127,36 +127,116 @@ struct ContentView: View {
                 }
                 
                     if let config = model.parsedConfig {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Parsed JSON")
-                                .font(.headline)
-                            if let useSOFA = config.optionalFeatures?.utilizeSOFAFeed {
-                                Text("Utilize SOFA Feed: \(useSOFA ? "true" : "false")")
-                            } else {
-                                Text("Utilize SOFA Feed: not set")
-                                    .foregroundStyle(.secondary)
-                            }
-                            if let requirement = config.osVersionRequirements.first {
-                                Text("Required Minimum OS: \(requirement.requiredMinimumOSVersion)")
-                                if let rule = requirement.targetedOSVersionsRule, !rule.isEmpty {
-                                    Text("Targeted OS Rule: \(rule)")
-                                }
-                                if let aggressive = config.optionalFeatures?.aggressiveUserExperience {
-                                    Text("Aggressive User Experience: \(aggressive ? "true" : "false")")
+                        HStack(alignment: .top, spacing: 16) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("General Settings")
+                                    .font(.headline)
+                                if let useSOFA = config.optionalFeatures?.utilizeSOFAFeed {
+                                    Text("Utilize SOFA Feed: \(useSOFA ? "true" : "false")")
                                 } else {
-                                    Text("Aggressive User Experience: not set")
+                                    Text("Utilize SOFA Feed: not set")
                                         .foregroundStyle(.secondary)
                                 }
-                                if let fullscreen = config.optionalFeatures?.aggressiveUserFullScreenExperience {
-                                    Text("Aggressive Full Screen Experience: \(fullscreen ? "true" : "false")")
+                                if let requirement = config.osVersionRequirements.first {
+                                    Text("Required Minimum OS: \(requirement.requiredMinimumOSVersion)")
+                                    if let rule = requirement.targetedOSVersionsRule, !rule.isEmpty {
+                                        Text("Targeted OS Rule: \(rule)")
+                                    }
+                                    if let aggressive = config.optionalFeatures?.aggressiveUserExperience {
+                                        Text("Aggressive User Experience: \(aggressive ? "true" : "false")")
+                                    } else {
+                                        Text("Aggressive User Experience: not set")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    if let fullscreen = config.optionalFeatures?.aggressiveUserFullScreenExperience {
+                                        Text("Aggressive Full Screen Experience: \(fullscreen ? "true" : "false")")
+                                    } else {
+                                        Text("Aggressive Full Screen Experience: not set")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Divider()
+                                    if let sla = model.slaKickoffSummary() {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("SLA Kickoff Dates (\(sla.source))")
+                                                .font(.headline)
+                                            Text("Release Date: \(sla.releaseDate)")
+                                            Text("Standard: \(sla.standard)")
+                                                .font((sla.highlight == .standard) ? .body.weight(.semibold) : .body)
+                                            Text("Non-Active CVE: \(sla.nonActive)")
+                                                .font((sla.highlight == .nonActive) ? .body.weight(.semibold) : .body)
+                                            Text("Active CVE: \(sla.active)")
+                                                .font((sla.highlight == .active) ? .body.weight(.semibold) : .body)
+                                        }
+                                    } else {
+                                        Text("SLA Kickoff Dates: n/a")
+                                            .foregroundStyle(.secondary)
+                                    }
                                 } else {
-                                    Text("Aggressive Full Screen Experience: not set")
+                                    Text("No osVersionRequirements found.")
                                         .foregroundStyle(.secondary)
                                 }
-                            } else {
-                                Text("No osVersionRequirements found.")
-                                    .foregroundStyle(.secondary)
                             }
+                            
+                            Divider()
+                            
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Deferrals")
+                                    .font(.headline)
+                                if let experience = config.userExperience {
+                                    if let value = experience.allowGracePeriods {
+                                        Text("Allow Grace Periods: \(value ? "true" : "false")")
+                                    } else {
+                                        Text("Allow Grace Periods: not set")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    if let value = experience.allowLaterDeferralButton {
+                                        Text("Allow Later Deferral Button: \(value ? "true" : "false")")
+                                    } else {
+                                        Text("Allow Later Deferral Button: not set")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    if let value = experience.allowUserQuitDeferrals {
+                                        Text("Allow User Quit Deferrals: \(value ? "true" : "false")")
+                                    } else {
+                                        Text("Allow User Quit Deferrals: not set")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    if let value = experience.allowedDeferrals {
+                                        Text("Allowed Deferrals: \(value)")
+                                    } else {
+                                        Text("Allowed Deferrals: not set")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    if let value = experience.allowedDeferralsUntilForcedSecondaryQuitButton {
+                                        Text("Allowed Deferrals Until Forced Secondary Quit: \(value)")
+                                    } else {
+                                        Text("Allowed Deferrals Until Forced Secondary Quit: not set")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    if let value = experience.calendarDeferralUnit {
+                                        Text("Calendar Deferral Unit: \(value)")
+                                    } else {
+                                        Text("Calendar Deferral Unit: not set")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    if let value = experience.approachingWindowTime {
+                                        Text("Approaching Window Time (hrs): \(value)")
+                                    } else {
+                                        Text("Approaching Window Time (hrs): not set")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    if let value = experience.imminentWindowTime {
+                                        Text("Imminent Window Time (hrs): \(value)")
+                                    } else {
+                                        Text("Imminent Window Time (hrs): not set")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                } else {
+                                    Text("No userExperience deferral settings.")
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                 } else if !model.parseError.isEmpty {
                     Text("Parse error: \(model.parseError)")
