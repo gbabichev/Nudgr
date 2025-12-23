@@ -319,8 +319,8 @@ struct ContentView: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(.blue)
-                .disabled(model.isExecuting || model.commandText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.selectedJSONPath.isEmpty)
-                .opacity(model.isExecuting || model.commandText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.selectedJSONPath.isEmpty ? 0.5 : 1.0)
+                .disabled(!model.nudgeInstalled || model.isExecuting || model.commandText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.selectedJSONPath.isEmpty)
+                .opacity(!model.nudgeInstalled || model.isExecuting || model.commandText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.selectedJSONPath.isEmpty ? 0.5 : 1.0)
             }
         }
         .sheet(isPresented: $isShowingInfo) {
