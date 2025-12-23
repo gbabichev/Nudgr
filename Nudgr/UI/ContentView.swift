@@ -17,8 +17,8 @@ struct ContentView: View {
         HStack(alignment: .top, spacing: 24) {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Command Builder")
-                    .font(.title3.weight(.semibold))
-                    .frame(maxWidth: .infinity, alignment: .center)
+                    .font(.title2.weight(.semibold))
+                    //.frame(maxWidth: .infinity, alignment: .center)
                 
                 Text("Test Nudge by building a run command, and executing with the play button in the toolbar.")
                     .font(.subheadline)
@@ -96,9 +96,18 @@ struct ContentView: View {
             Divider()
             
             VStack(alignment: .leading, spacing: 12) {
-                Text("JSON Info")
-                    .font(.title3.weight(.semibold))
-                    .frame(maxWidth: .infinity, alignment: .center)
+                HStack {
+                    Text("JSON Info")
+                        .font(.title2.weight(.semibold))
+                    Spacer()
+                    Button {
+                        model.refreshSelectedJSON()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(model.selectedJSONPath.isEmpty)
+                }
                 
                 VStack(alignment: .leading, spacing: 8) {
                     if !model.selectedJSONPath.isEmpty {
@@ -161,7 +170,7 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text("SOFA Feed")
-                            .font(.title3.weight(.semibold))
+                            .font(.title2.weight(.semibold))
                         if model.isFetchingSOFA {
                             ProgressView()
                                 .controlSize(.small)
@@ -230,8 +239,8 @@ struct ContentView: View {
                 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Required Install By")
-                        .font(.title3.weight(.semibold))
-                        .frame(maxWidth: .infinity, alignment: .center)
+                        .font(.title2.weight(.semibold))
+                        //.frame(maxWidth: .infinity, alignment: .center)
                     if model.selectedJSONPath.isEmpty {
                         Text("Select a JSON file to view requirement summaries.")
                             .foregroundStyle(.secondary)

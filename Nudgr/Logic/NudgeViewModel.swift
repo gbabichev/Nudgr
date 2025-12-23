@@ -137,6 +137,17 @@ class NudgeViewModel: ObservableObject {
         }
     }
 
+    func refreshSelectedJSON() {
+        let trimmed = selectedJSONPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let url = URL(fileURLWithPath: trimmed)
+        parseConfig(at: url)
+        appendLog("Refreshed JSON: \(url.lastPathComponent)")
+//        if isSOFAEnabled {
+//            fetchSOFAFeed()
+//        }
+    }
+
     func buildCommand(jsonPath: String) -> String {
         var normalizedPath = jsonPath
         if normalizedPath.lowercased().hasPrefix("file://") {
