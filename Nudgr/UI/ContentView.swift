@@ -231,6 +231,18 @@ struct ContentView: View {
                                         Text("Imminent Window Time (hrs): not set")
                                             .foregroundStyle(.secondary)
                                     }
+                                    if let value = experience.nudgeMajorUpgradeEventLaunchDelay {
+                                        Text("Major Upgrade Launch Delay (days): \(value)")
+                                    } else {
+                                        Text("Major Upgrade Launch Delay (days): not set")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    if let value = experience.nudgeMinorUpdateEventLaunchDelay {
+                                        Text("Minor Update Launch Delay (days): \(value)")
+                                    } else {
+                                        Text("Minor Update Launch Delay (days): not set")
+                                            .foregroundStyle(.secondary)
+                                    }
                                 } else {
                                     Text("No userExperience deferral settings.")
                                         .foregroundStyle(.secondary)
