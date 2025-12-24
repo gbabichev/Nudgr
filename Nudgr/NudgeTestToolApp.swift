@@ -11,6 +11,7 @@ import SwiftUI
 struct NudgeTestToolApp: App {
     @State private var isAboutPresented: Bool = false
     @State private var isShowingFileImporter: Bool = false
+    @State private var isShowingJSONBuilder: Bool = false
     @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
@@ -18,6 +19,9 @@ struct NudgeTestToolApp: App {
             ContentView(isShowingFileImporter: $isShowingFileImporter)
                 .sheet(isPresented: $isAboutPresented) {
                     AboutView()
+                }
+                .sheet(isPresented: $isShowingJSONBuilder) {
+                    JSONBuilderSheet(isPresented: $isShowingJSONBuilder)
                 }
         }
         .windowStyle(.hiddenTitleBar)
@@ -38,6 +42,12 @@ struct NudgeTestToolApp: App {
                 .keyboardShortcut("n", modifiers: [.command])
             }
             CommandGroup(after: .newItem) {
+                Button {
+                    isShowingJSONBuilder = true
+                } label: {
+                    Label("New JSON File", systemImage: "doc.badge.plus")
+                }
+                .keyboardShortcut("n", modifiers: [.command, .shift])
                 Button {
                     isShowingFileImporter = true
                 } label: {
