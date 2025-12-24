@@ -221,77 +221,7 @@ class NudgeViewModel: ObservableObject {
                 case .cache(let error):
                     sofaError = error.localizedDescription
                 }
-                let lastCheck = feed.lastCheck ?? "n/a"
-                let xprotectPlist = feed.xProtectPlistConfigData?.releaseDate ?? "n/a"
-                let xprotectPlistHash = feed.xProtectPlistConfigData?.comAppleXProtect ?? "n/a"
-                let xprotectPayloads = feed.xProtectPayloads?.releaseDate ?? "n/a"
-                let xprotectPayloadsService = feed.xProtectPayloads?.pluginService ?? "n/a"
-                let xprotectPayloadsVersion = feed.xProtectPayloads?.xProtect ?? "n/a"
-                let installationApp = feed.installationApps?.latestUMA?.title ?? "n/a"
-                let installationAppVersion = feed.installationApps?.latestUMA?.version ?? "n/a"
-                let installationAppBuild = feed.installationApps?.latestUMA?.build ?? "n/a"
-                let installationAppSlug = feed.installationApps?.latestUMA?.appleSlug ?? "n/a"
-                let installationAppURL = feed.installationApps?.latestUMA?.url ?? "n/a"
-                let installationAppPosted = feed.installationApps?.latestUMA?.postingDate ?? "n/a"
-                let installationAppSize = feed.installationApps?.latestUMA?.size.map(String.init) ?? "n/a"
-                let previousUMA = feed.installationApps?.allPreviousUMA?.compactMap { app in
-                    guard let title = app.title else { return nil }
-                    let slug = app.appleSlug ?? "n/a"
-                    return "\(title) (\(slug))"
-                }.joined(separator: ", ") ?? "n/a"
-                let ipsw = feed.installationApps?.latestMacIPSW?.version ?? "n/a"
-                let ipswURL = feed.installationApps?.latestMacIPSW?.url ?? "n/a"
-                let ipswBuild = feed.installationApps?.latestMacIPSW?.build ?? "n/a"
-                let ipswSlug = feed.installationApps?.latestMacIPSW?.appleSlug ?? "n/a"
-                let securityReleasesCount = feed.osVersions.compactMap { $0.securityReleases?.count }.reduce(0, +)
-                let supportedModelCount = feed.osVersions.compactMap { $0.supportedModels?.count }.reduce(0, +)
-                let latestUpdateName = feed.osVersions.first?.latest?.updateName ?? "n/a"
-                let latestRelease = feed.osVersions.first?.latest
-                let productName = latestRelease?.productName ?? "n/a"
-                let build = latestRelease?.build ?? "n/a"
-                let allBuilds = latestRelease?.allBuilds?.joined(separator: ", ") ?? "n/a"
-                let expirationDate = latestRelease?.expirationDate ?? "n/a"
-                let releaseType = latestRelease?.releaseType ?? "n/a"
-                let securityInfo = latestRelease?.securityInfo ?? "n/a"
-                let securityInfoContext = latestRelease?.securityInfoContext ?? "n/a"
-                let supportedDevices = latestRelease?.supportedDevices?.joined(separator: ", ") ?? "n/a"
-                let daysSincePrevious = latestRelease?.daysSincePreviousRelease.map(String.init) ?? "n/a"
-                let summaryPriority = latestRelease?.updateSummary?.priority ?? "n/a"
-                let summaryText = latestRelease?.updateSummary?.summary ?? "n/a"
-                let summaryRecommendation = latestRelease?.updateSummary?.recommendation ?? "n/a"
-                let stats = latestRelease?.updateSummary?.stats
-                let statSummary: String
-                if let stats {
-                    let parts: [String] = [
-                        stats.exploited.map { "exploited \($0)" },
-                        stats.critical.map { "critical \($0)" },
-                        stats.high.map { "high \($0)" },
-                        stats.medium.map { "medium \($0)" },
-                        stats.low.map { "low \($0)" },
-                        stats.remote.map { "remote \($0)" },
-                        stats.total.map { "total \($0)" }
-                    ].compactMap { $0 }
-                    statSummary = parts.isEmpty ? "n/a" : parts.joined(separator: ", ")
-                } else {
-                    statSummary = "n/a"
-                }
-                let cveSample: String
-                if let entry = latestRelease?.cves?.first {
-                    let key = entry.key
-                    let info = entry.value
-                    let sev = info.severity ?? "n/a"
-                    let exploited = (info.activelyExploited ?? false) ? "yes" : "no"
-                    let kev = (info.inKEV ?? false) ? "yes" : "no"
-                    let url = info.nistURL ?? "n/a"
-                    cveSample = "\(key) (severity \(sev), exploited \(exploited), KEV \(kev), nist \(url))"
-                } else {
-                    cveSample = "n/a"
-                }
-                appendLog("""
-Fetched SOFA feed (version \(feed.version), hash \(feed.updateHash), last check \(lastCheck)).
-XProtect plist: \(xprotectPlist) (hash \(xprotectPlistHash)), XProtect payloads: \(xprotectPayloads) (service \(xprotectPayloadsService), version \(xprotectPayloadsVersion)), Installation app: \(installationApp) (v\(installationAppVersion), build \(installationAppBuild), slug \(installationAppSlug), url \(installationAppURL), posted \(installationAppPosted), size \(installationAppSize)), Previous UMA: \(previousUMA), IPSW version: \(ipsw) (build \(ipswBuild), slug \(ipswSlug), url \(ipswURL)), Security releases: \(securityReleasesCount), Supported models: \(supportedModelCount), Latest update name: \(latestUpdateName).
-Release details — product: \(productName), build: \(build), all builds: \(allBuilds), expiration: \(expirationDate), type: \(releaseType), security info: \(securityInfo), context: \(securityInfoContext), supported devices: \(supportedDevices), days since prev: \(daysSincePrevious), summary priority: \(summaryPriority), summary: \(summaryText), recommendation: \(summaryRecommendation), stats: \(statSummary), sample CVE: \(cveSample).
-""")
+                appendLog("Retrieved SOFA feed successfully.")
             } catch {
                 sofaError = error.localizedDescription
                 isFetchingSOFA = false
@@ -378,7 +308,6 @@ Release details — product: \(productName), build: \(build), all builds: \(allB
         let releaseDate: Date
         let releaseDateLabel: String
         let isMajorUpdate: Bool
-        let usedSOFA: Bool
         let highlightScenario: SLAScenario?
         if isSOFAEnabled,
            let summary = selectSOFASummaryForRequirement(requirement),
@@ -386,11 +315,8 @@ Release details — product: \(productName), build: \(build), all builds: \(allB
             releaseDate = parsedRelease
             releaseDateLabel = isoLocalString(from: parsedRelease)
             isMajorUpdate = isMajorRelease(summary.productVersion)
-            usedSOFA = true
             highlightScenario = scenarioFromSOFASummary(summary)
-        } else {
-            return nil
-        }
+        } else { return nil }
 
         let standardDays = isMajorUpdate
         ? (requirement.standardMajorUpgradeSLA ?? defaults.standard)
@@ -415,9 +341,8 @@ Release details — product: \(productName), build: \(build), all builds: \(allB
         let activeDate = calendar.date(byAdding: .day, value: activeDays, to: releaseDate)
             .map(isoLocalString) ?? "n/a"
 
-        let source = usedSOFA ? "SOFA" : "Local"
         return SLAKickoffSummary(
-            source: source,
+            source: "SOFA",
             releaseDate: releaseDateLabel,
             standard: standardDate,
             nonActive: nonActiveDate,
