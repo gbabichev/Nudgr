@@ -119,7 +119,6 @@ struct NudgeInfoSheet: View {
             HStack(spacing: 8) {
                 Button("Default Logging") {
                     let cmd = #"log stream --predicate 'subsystem == "com.github.macadmins.Nudge"' --style syslog --color none"#
-                    model.commandText = cmd
                     model.latestSuiteURL = cmd
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(cmd, forType: .string)
@@ -129,7 +128,6 @@ struct NudgeInfoSheet: View {
                 
                 Button("More Logging") {
                     let cmd = #"log stream --predicate 'subsystem == "com.github.macadmins.Nudge"' --info --style syslog --color none"#
-                    model.commandText = cmd
                     model.latestSuiteURL = cmd
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(cmd, forType: .string)
@@ -139,7 +137,6 @@ struct NudgeInfoSheet: View {
                 
                 Button("JSON Logging") {
                     let cmd = #"log show --predicate 'subsystem == "com.github.macadmins.Nudge"' --info --style json --debug"#
-                    model.commandText = cmd
                     model.latestSuiteURL = cmd
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(cmd, forType: .string)
