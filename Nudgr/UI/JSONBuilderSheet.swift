@@ -121,6 +121,7 @@ struct JSONBuilderSheet: View {
     @State private var loadError: String = ""
     @State private var loadStatus: String = ""
     @State private var isLoadedFromJSON: Bool = false
+    @State private var loadedJSONURL: URL?
     @State private var optionalFeaturesKeys: Set<String> = []
     @State private var userExperienceKeys: Set<String> = []
     @State private var userInterfaceKeys: Set<String> = []
@@ -168,9 +169,17 @@ struct JSONBuilderSheet: View {
                 Button {
                     saveJSON()
                 } label: {
+                    Label("Save As", systemImage: "square.and.arrow.down")
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    saveLoadedJSON()
+                } label: {
                     Label("Save JSON", systemImage: "square.and.arrow.down")
                 }
                 .buttonStyle(.bordered)
+                .disabled(loadedJSONURL == nil)
 
                 Button {
                     NSPasteboard.general.clearContents()
@@ -740,6 +749,7 @@ struct JSONBuilderSheet: View {
 
     private func resetLoadTracking() {
         isLoadedFromJSON = false
+        loadedJSONURL = nil
         optionalFeaturesKeys = []
         userExperienceKeys = []
         userInterfaceKeys = []
@@ -775,6 +785,7 @@ struct JSONBuilderSheet: View {
     private func loadFromJSON(url: URL) {
         loadError = ""
         loadStatus = ""
+        loadedJSONURL = url
         let scoped = url.startAccessingSecurityScopedResource()
         defer {
             if scoped {
@@ -949,6 +960,7 @@ struct JSONBuilderSheet: View {
     private func loadFromModelSelection() {
         if let data = model.selectedJSONData {
             loadFromJSONData(data, label: model.selectedJSONPath.isEmpty ? "Selected JSON" : model.selectedJSONPath)
+            loadedJSONURL = model.secureSelectedJSONURL()
             return
         }
         if let url = model.secureSelectedJSONURL() {
@@ -1021,6 +1033,26 @@ struct JSONBuilderSheet: View {
         guard response == .OK, let url = panel.url else { return }
         do {
             try jsonPreview.write(to: url, atomically: true, encoding: .utf8)
+        } catch {
+            saveError = "Save failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func saveLoadedJSON() {
+        saveError = ""
+        guard let url = loadedJSONURL else {
+            saveError = "Save failed: No source file to replace."
+            return
+        }
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer {
+            if scoped {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        do {
+            try jsonPreview.write(to: url, atomically: true, encoding: .utf8)
+            loadStatus = "Saved JSON: \(url.lastPathComponent)"
         } catch {
             saveError = "Save failed: \(error.localizedDescription)"
         }
