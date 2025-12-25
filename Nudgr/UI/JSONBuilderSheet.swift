@@ -12,6 +12,12 @@ struct OSVersionRequirementDraft: Identifiable {
     var aboutUpdateURLs: String = ""
     var actionButtonPath: String = ""
     var majorUpgradeAppPath: String = ""
+    var activelyExploitedCVEsMajorUpgradeSLA: String = ""
+    var activelyExploitedCVEsMinorUpdateSLA: String = ""
+    var nonActivelyExploitedCVEsMajorUpgradeSLA: String = ""
+    var nonActivelyExploitedCVEsMinorUpdateSLA: String = ""
+    var standardMajorUpgradeSLA: String = ""
+    var standardMinorUpdateSLA: String = ""
 }
 
 struct FieldBlock<Content: View>: View {
@@ -105,7 +111,6 @@ struct JSONBuilderSheet: View {
     @State private var simpleMode: Bool = false
     @State private var singleQuitButton: Bool = false
     @State private var updateElements: String = ""
-    @State private var jsonPreviewText: String = ""
     @State private var isOptionalFeaturesExpanded: Bool = false
     @State private var isOSRequirementsExpanded: Bool = false
     @State private var isUserExperienceExpanded: Bool = false
@@ -161,7 +166,7 @@ struct JSONBuilderSheet: View {
 
                 Button {
                     NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(jsonPreviewText, forType: .string)
+                    NSPasteboard.general.setString(jsonPreview, forType: .string)
                 } label: {
                     Label("Copy JSON", systemImage: "doc.on.doc")
                 }
@@ -414,6 +419,36 @@ struct JSONBuilderSheet: View {
                                         TextField("Major Upgrade App Path", text: binding(for: requirement.id, keyPath: \.majorUpgradeAppPath))
                                             .textFieldStyle(.roundedBorder)
                                     }
+
+                                    FieldBlock("Actively Exploited CVEs Major Upgrade SLA (days)") {
+                                        TextField("Defaults to 14", text: binding(for: requirement.id, keyPath: \.activelyExploitedCVEsMajorUpgradeSLA))
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+
+                                    FieldBlock("Actively Exploited CVEs Minor Update SLA (days)") {
+                                        TextField("Defaults to 14", text: binding(for: requirement.id, keyPath: \.activelyExploitedCVEsMinorUpdateSLA))
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+
+                                    FieldBlock("Non-Actively Exploited CVEs Major Upgrade SLA (days)") {
+                                        TextField("Defaults to 21", text: binding(for: requirement.id, keyPath: \.nonActivelyExploitedCVEsMajorUpgradeSLA))
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+
+                                    FieldBlock("Non-Actively Exploited CVEs Minor Update SLA (days)") {
+                                        TextField("Defaults to 21", text: binding(for: requirement.id, keyPath: \.nonActivelyExploitedCVEsMinorUpdateSLA))
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+
+                                    FieldBlock("Standard Major Upgrade SLA (days)") {
+                                        TextField("Defaults to 28", text: binding(for: requirement.id, keyPath: \.standardMajorUpgradeSLA))
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+
+                                    FieldBlock("Standard Minor Update SLA (days)") {
+                                        TextField("Defaults to 28", text: binding(for: requirement.id, keyPath: \.standardMinorUpdateSLA))
+                                            .textFieldStyle(.roundedBorder)
+                                    }
                                 }
                                 .padding(12)
                                 .background(
@@ -429,7 +464,16 @@ struct JSONBuilderSheet: View {
                             }
                             .buttonStyle(.bordered)
                             
-                            Text("SOFA uses release dates in UTC to compute requiredInstallationDate. SLA defaults: active 14 days, non-active 21 days, standard 28 days.")
+                            Text("Nudge will then utilize two date integers to automatically calculate the requiredInstallationDate.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                            Text("SLA defaults: active 14 days, non-active 21 days, standard 28 days.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                            Text("These dates are calculated against the ReleaseDate key in the SOFA feed (UTC). Local timezones are not supported unless you use a custom feed and ISO-8601 dates.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                            Text("To delay SOFA nudge events, adjust nudgeMajorUpgradeEventLaunchDelay and nudgeMinorUpdateEventLaunchDelay.")
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                             Text("To suppress non-CVE nudges, set optionalFeatures.disableNudgeForStandardInstalls to true.")
@@ -631,7 +675,7 @@ struct JSONBuilderSheet: View {
 
                     DisclosureGroup("Generated JSON", isExpanded: $isGeneratedJSONExpanded) {
                         GroupBox {
-                            TextEditor(text: $jsonPreviewText)
+                            TextEditor(text: .constant(jsonPreview))
                                 .font(.system(.body, design: .monospaced))
                                 .frame(minHeight: 220)
                         }
@@ -644,7 +688,6 @@ struct JSONBuilderSheet: View {
         .padding(24)
         .frame(minWidth: 640, minHeight: 520)
         .onAppear {
-            jsonPreviewText = jsonPreview
             if loadFromSelection {
                 loadFromModelSelection()
             }
@@ -653,9 +696,6 @@ struct JSONBuilderSheet: View {
             if loadFromSelection {
                 loadFromModelSelection()
             }
-        }
-        .onChange(of: jsonPreview) { newValue,_ in
-            jsonPreviewText = newValue
         }
     }
 
@@ -774,6 +814,24 @@ struct JSONBuilderSheet: View {
                 if let value = item["majorUpgradeAppPath"] as? String {
                     draft.majorUpgradeAppPath = value
                 }
+                if let value = numberString(item["activelyExploitedCVEsMajorUpgradeSLA"]) {
+                    draft.activelyExploitedCVEsMajorUpgradeSLA = value
+                }
+                if let value = numberString(item["activelyExploitedCVEsMinorUpdateSLA"]) {
+                    draft.activelyExploitedCVEsMinorUpdateSLA = value
+                }
+                if let value = numberString(item["nonActivelyExploitedCVEsMajorUpgradeSLA"]) {
+                    draft.nonActivelyExploitedCVEsMajorUpgradeSLA = value
+                }
+                if let value = numberString(item["nonActivelyExploitedCVEsMinorUpdateSLA"]) {
+                    draft.nonActivelyExploitedCVEsMinorUpdateSLA = value
+                }
+                if let value = numberString(item["standardMajorUpgradeSLA"]) {
+                    draft.standardMajorUpgradeSLA = value
+                }
+                if let value = numberString(item["standardMinorUpdateSLA"]) {
+                    draft.standardMinorUpdateSLA = value
+                }
                 return draft
             }
             if !drafts.isEmpty {
@@ -831,7 +889,6 @@ struct JSONBuilderSheet: View {
             }
         }
 
-        jsonPreviewText = jsonPreview
     }
 
     private func loadFromModelSelection() {
@@ -908,7 +965,7 @@ struct JSONBuilderSheet: View {
     private func handleSavePanelResponse(_ response: NSApplication.ModalResponse, panel: NSSavePanel) {
         guard response == .OK, let url = panel.url else { return }
         do {
-            try jsonPreviewText.write(to: url, atomically: true, encoding: .utf8)
+            try jsonPreview.write(to: url, atomically: true, encoding: .utf8)
         } catch {
             saveError = "Save failed: \(error.localizedDescription)"
         }
@@ -993,6 +1050,36 @@ struct JSONBuilderSheet: View {
             let majorUpgradePath = item.majorUpgradeAppPath.trimmingCharacters(in: .whitespacesAndNewlines)
             if !majorUpgradePath.isEmpty {
                 dict["majorUpgradeAppPath"] = majorUpgradePath
+            }
+
+            let activeMajor = item.activelyExploitedCVEsMajorUpgradeSLA.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let value = Int(activeMajor) {
+                dict["activelyExploitedCVEsMajorUpgradeSLA"] = value
+            }
+
+            let activeMinor = item.activelyExploitedCVEsMinorUpdateSLA.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let value = Int(activeMinor) {
+                dict["activelyExploitedCVEsMinorUpdateSLA"] = value
+            }
+
+            let nonActiveMajor = item.nonActivelyExploitedCVEsMajorUpgradeSLA.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let value = Int(nonActiveMajor) {
+                dict["nonActivelyExploitedCVEsMajorUpgradeSLA"] = value
+            }
+
+            let nonActiveMinor = item.nonActivelyExploitedCVEsMinorUpdateSLA.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let value = Int(nonActiveMinor) {
+                dict["nonActivelyExploitedCVEsMinorUpdateSLA"] = value
+            }
+
+            let standardMajor = item.standardMajorUpgradeSLA.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let value = Int(standardMajor) {
+                dict["standardMajorUpgradeSLA"] = value
+            }
+
+            let standardMinor = item.standardMinorUpdateSLA.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let value = Int(standardMinor) {
+                dict["standardMinorUpdateSLA"] = value
             }
 
             return dict
