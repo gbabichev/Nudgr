@@ -10,6 +10,9 @@ class NudgeViewModel: ObservableObject {
     @Published var activityLog: String = ""
 
     @Published var selectedJSONPath: String = ""
+    @Published var selectedJSONURL: URL?
+    @Published var selectedJSONData: Data?
+    private var selectedJSONBookmark: Data?
     @Published var parsedConfig: NudgeConfig?
     @Published var parseError: String = ""
 
@@ -124,11 +127,21 @@ class NudgeViewModel: ObservableObject {
 
     func handleJSONSelection(url: URL) {
         let resolvedURL = url
-        if resolvedURL.startAccessingSecurityScopedResource() {
-            do { resolvedURL.stopAccessingSecurityScopedResource() }
+        do {
+            selectedJSONBookmark = try resolvedURL.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
+        } catch {
+            selectedJSONBookmark = nil
         }
+        let scoped = resolvedURL.startAccessingSecurityScopedResource()
+        defer {
+            if scoped {
+                resolvedURL.stopAccessingSecurityScopedResource()
+            }
+        }
+        selectedJSONData = try? Data(contentsOf: resolvedURL)
 
         selectedJSONPath = resolvedURL.path
+        selectedJSONURL = resolvedURL
         commandText = buildCommand(jsonPath: resolvedURL.path)
         appendLog("Selected JSON: \(resolvedURL.lastPathComponent)")
         parseConfig(at: resolvedURL)
@@ -137,10 +150,29 @@ class NudgeViewModel: ObservableObject {
         }
     }
 
-    func refreshSelectedJSON() {
+    func secureSelectedJSONURL() -> URL? {
         let trimmed = selectedJSONPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        let url = URL(fileURLWithPath: trimmed)
+        if trimmed.isEmpty && selectedJSONURL == nil && selectedJSONBookmark == nil {
+            return nil
+        }
+        if let bookmark = selectedJSONBookmark {
+            var isStale = false
+            if let url = try? URL(resolvingBookmarkData: bookmark, options: [.withSecurityScope], relativeTo: nil, bookmarkDataIsStale: &isStale) {
+                return url
+            }
+        }
+        return selectedJSONURL ?? URL(fileURLWithPath: trimmed)
+    }
+
+    func refreshSelectedJSON() {
+        guard let url = secureSelectedJSONURL() else { return }
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer {
+            if scoped {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        selectedJSONData = try? Data(contentsOf: url)
         parseConfig(at: url)
         appendLog("Refreshed JSON: \(url.lastPathComponent)")
 //        if isSOFAEnabled {

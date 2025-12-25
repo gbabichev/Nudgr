@@ -41,6 +41,8 @@ struct FieldBlock<Content: View>: View {
 
 struct JSONBuilderSheet: View {
     @Binding var isPresented: Bool
+    @ObservedObject var model: NudgeViewModel
+    let loadFromSelection: Bool
     @State private var acceptableApplicationBundleIDs: String = ""
     @State private var acceptableAssertionApplicationNames: String = ""
     @State private var acceptableAssertionUsage: Bool = false
@@ -110,6 +112,8 @@ struct JSONBuilderSheet: View {
     @State private var isUserInterfaceExpanded: Bool = false
     @State private var isGeneratedJSONExpanded: Bool = false
     @State private var saveError: String = ""
+    @State private var loadError: String = ""
+    @State private var loadStatus: String = ""
 
     var body: some View {
         VStack(spacing: 16) {
@@ -131,6 +135,9 @@ struct JSONBuilderSheet: View {
 
             Text("Build & modify Nudge JSON configurations")
                 .foregroundStyle(.secondary)
+            Text("Warning: This is an experimental feature")
+                .foregroundStyle(.red)
+                .font(.footnote)
 
             HStack(spacing: 8) {
                 Button("Expand All") {
@@ -169,6 +176,16 @@ struct JSONBuilderSheet: View {
             if !saveError.isEmpty {
                 Text(saveError)
                     .foregroundStyle(.red)
+                    .font(.footnote)
+            }
+            if !loadError.isEmpty {
+                Text(loadError)
+                    .foregroundStyle(.red)
+                    .font(.footnote)
+            }
+            if !loadStatus.isEmpty {
+                Text(loadStatus)
+                    .foregroundStyle(.secondary)
                     .font(.footnote)
             }
 
@@ -628,6 +645,14 @@ struct JSONBuilderSheet: View {
         .frame(minWidth: 640, minHeight: 520)
         .onAppear {
             jsonPreviewText = jsonPreview
+            if loadFromSelection {
+                loadFromModelSelection()
+            }
+        }
+        .onChange(of: model.selectedJSONPath) { _, _ in
+            if loadFromSelection {
+                loadFromModelSelection()
+            }
         }
         .onChange(of: jsonPreview) { newValue,_ in
             jsonPreviewText = newValue
@@ -661,6 +686,197 @@ struct JSONBuilderSheet: View {
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.formatOptions = [.withInternetDateTime, .withColonSeparatorInTime, .withDashSeparatorInDate]
         return formatter.string(from: date)
+    }
+
+    private func loadFromJSON(url: URL) {
+        loadError = ""
+        loadStatus = ""
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer {
+            if scoped {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        let data: Data
+        do {
+            data = try Data(contentsOf: url)
+        } catch {
+            loadError = "Load failed: \(error.localizedDescription)"
+            return
+        }
+        loadFromJSONData(data, label: url.lastPathComponent)
+    }
+
+    private func loadFromJSONData(_ data: Data, label: String) {
+        let object: Any
+        do {
+            object = try JSONSerialization.jsonObject(with: data)
+        } catch {
+            loadError = "Load failed: \(error.localizedDescription)"
+            return
+        }
+        guard let root = object as? [String: Any] else {
+            loadError = "Load failed: Root JSON must be an object."
+            return
+        }
+        let keyList = root.keys.sorted().joined(separator: ", ")
+        loadStatus = "Loaded JSON: \(label) (keys: \(keyList))"
+
+        if let optional = root["optionalFeatures"] as? [String: Any] {
+            acceptableApplicationBundleIDs = joinList(optional["acceptableApplicationBundleIDs"])
+            acceptableAssertionApplicationNames = joinList(optional["acceptableAssertionApplicationNames"])
+            acceptableAssertionUsage = optional["acceptableAssertionUsage"] as? Bool ?? acceptableAssertionUsage
+            acceptableCameraUsage = optional["acceptableCameraUsage"] as? Bool ?? acceptableCameraUsage
+            acceptableUpdatePreparingUsage = optional["acceptableUpdatePreparingUsage"] as? Bool ?? acceptableUpdatePreparingUsage
+            acceptableScreenSharingUsage = optional["acceptableScreenSharingUsage"] as? Bool ?? acceptableScreenSharingUsage
+            aggressiveUserExperience = optional["aggressiveUserExperience"] as? Bool ?? aggressiveUserExperience
+            aggressiveUserFullScreenExperience = optional["aggressiveUserFullScreenExperience"] as? Bool ?? aggressiveUserFullScreenExperience
+            asynchronousSoftwareUpdate = optional["asynchronousSoftwareUpdate"] as? Bool ?? asynchronousSoftwareUpdate
+            attemptToBlockApplicationLaunches = optional["attemptToBlockApplicationLaunches"] as? Bool ?? attemptToBlockApplicationLaunches
+            attemptToCheckForSupportedDevice = optional["attemptToCheckForSupportedDevice"] as? Bool ?? attemptToCheckForSupportedDevice
+            attemptToFetchMajorUpgrade = optional["attemptToFetchMajorUpgrade"] as? Bool ?? attemptToFetchMajorUpgrade
+            blockedApplicationBundleIDs = joinList(optional["blockedApplicationBundleIDs"])
+            customSOFAFeedURL = optional["customSOFAFeedURL"] as? String ?? customSOFAFeedURL
+            disableNudgeForStandardInstalls = optional["disableNudgeForStandardInstalls"] as? Bool ?? disableNudgeForStandardInstalls
+            disableSoftwareUpdateWorkflow = optional["disableSoftwareUpdateWorkflow"] as? Bool ?? disableSoftwareUpdateWorkflow
+            enforceMinorUpdates = optional["enforceMinorUpdates"] as? Bool ?? enforceMinorUpdates
+            honorFocusModes = optional["honorFocusModes"] as? Bool ?? honorFocusModes
+            refreshSOFAFeedTime = numberString(optional["refreshSOFAFeedTime"]) ?? refreshSOFAFeedTime
+            terminateApplicationsOnLaunch = optional["terminateApplicationsOnLaunch"] as? Bool ?? terminateApplicationsOnLaunch
+            utilizeSOFAFeed = optional["utilizeSOFAFeed"] as? Bool ?? utilizeSOFAFeed
+        }
+
+        if let requirements = root["osVersionRequirements"] as? [[String: Any]] {
+            let drafts = requirements.map { item -> OSVersionRequirementDraft in
+                var draft = OSVersionRequirementDraft()
+                if let value = item["requiredMinimumOSVersion"] as? String {
+                    draft.requiredMinimumOSVersion = value
+                }
+                if let value = item["requiredInstallationDate"] as? String {
+                    draft.requiredInstallationDate = value
+                }
+                if let value = item["targetedOSVersionsRule"] as? String {
+                    draft.targetedOSVersionsRule = value
+                }
+                if let value = item["aboutUpdateURL"] as? String {
+                    draft.aboutUpdateURL = value
+                }
+                if let value = item["aboutUpdateURLs"] as? [[String: Any]] {
+                    draft.aboutUpdateURLs = value.compactMap { entry in
+                        guard let lang = entry["_language"] as? String,
+                              let url = entry["aboutUpdateURL"] as? String else { return nil }
+                        return "\(lang)=\(url)"
+                    }.joined(separator: ", ")
+                }
+                if let value = item["actionButtonPath"] {
+                    draft.actionButtonPath = joinList(value)
+                }
+                if let value = item["majorUpgradeAppPath"] as? String {
+                    draft.majorUpgradeAppPath = value
+                }
+                return draft
+            }
+            if !drafts.isEmpty {
+                osVersionRequirements = drafts
+            }
+        }
+
+        if let experience = root["userExperience"] as? [String: Any] {
+            allowGracePeriods = experience["allowGracePeriods"] as? Bool ?? allowGracePeriods
+            allowLaterDeferralButton = experience["allowLaterDeferralButton"] as? Bool ?? allowLaterDeferralButton
+            allowMovableWindow = experience["allowMovableWindow"] as? Bool ?? allowMovableWindow
+            allowUserQuitDeferrals = experience["allowUserQuitDeferrals"] as? Bool ?? allowUserQuitDeferrals
+            allowedDeferrals = numberString(experience["allowedDeferrals"]) ?? allowedDeferrals
+            allowedDeferralsUntilForcedSecondaryQuitButton = numberString(experience["allowedDeferralsUntilForcedSecondaryQuitButton"]) ?? allowedDeferralsUntilForcedSecondaryQuitButton
+            approachingRefreshCycle = numberString(experience["approachingRefreshCycle"]) ?? approachingRefreshCycle
+            approachingWindowTime = numberString(experience["approachingWindowTime"]) ?? approachingWindowTime
+            calendarDeferralUnit = experience["calendarDeferralUnit"] as? String ?? calendarDeferralUnit
+            elapsedRefreshCycle = numberString(experience["elapsedRefreshCycle"]) ?? elapsedRefreshCycle
+            gracePeriodInstallDelay = numberString(experience["gracePeriodInstallDelay"]) ?? gracePeriodInstallDelay
+            gracePeriodLaunchDelay = numberString(experience["gracePeriodLaunchDelay"]) ?? gracePeriodLaunchDelay
+            gracePeriodPath = experience["gracePeriodPath"] as? String ?? gracePeriodPath
+            imminentRefreshCycle = numberString(experience["imminentRefreshCycle"]) ?? imminentRefreshCycle
+            imminentWindowTime = numberString(experience["imminentWindowTime"]) ?? imminentWindowTime
+            initialRefreshCycle = numberString(experience["initialRefreshCycle"]) ?? initialRefreshCycle
+            launchAgentIdentifier = experience["launchAgentIdentifier"] as? String ?? launchAgentIdentifier
+            loadLaunchAgent = experience["loadLaunchAgent"] as? Bool ?? loadLaunchAgent
+            maxRandomDelayInSeconds = numberString(experience["maxRandomDelayInSeconds"]) ?? maxRandomDelayInSeconds
+            noTimers = experience["noTimers"] as? Bool ?? noTimers
+            nudgeMajorUpgradeEventLaunchDelay = numberString(experience["nudgeMajorUpgradeEventLaunchDelay"]) ?? nudgeMajorUpgradeEventLaunchDelay
+            nudgeMinorUpdateEventLaunchDelay = numberString(experience["nudgeMinorUpdateEventLaunchDelay"]) ?? nudgeMinorUpdateEventLaunchDelay
+            nudgeRefreshCycle = numberString(experience["nudgeRefreshCycle"]) ?? nudgeRefreshCycle
+            randomDelay = experience["randomDelay"] as? Bool ?? randomDelay
+        }
+
+        if let ui = root["userInterface"] as? [String: Any] {
+            applicationTerminatedNotificationImagePath = ui["applicationTerminatedNotificationImagePath"] as? String ?? applicationTerminatedNotificationImagePath
+            fallbackLanguage = ui["fallbackLanguage"] as? String ?? fallbackLanguage
+            forceFallbackLanguage = ui["forceFallbackLanguage"] as? Bool ?? forceFallbackLanguage
+            forceScreenShotIcon = ui["forceScreenShotIcon"] as? Bool ?? forceScreenShotIcon
+            iconDarkPath = ui["iconDarkPath"] as? String ?? iconDarkPath
+            iconLightPath = ui["iconLightPath"] as? String ?? iconLightPath
+            requiredInstallationDisplayFormat = ui["requiredInstallationDisplayFormat"] as? String ?? requiredInstallationDisplayFormat
+            screenShotDarkPath = ui["screenShotDarkPath"] as? String ?? screenShotDarkPath
+            screenShotLightPath = ui["screenShotLightPath"] as? String ?? screenShotLightPath
+            showActivelyExploitedCVEs = ui["showActivelyExploitedCVEs"] as? Bool ?? showActivelyExploitedCVEs
+            showDeferralCount = ui["showDeferralCount"] as? Bool ?? showDeferralCount
+            showDaysRemainingToUpdate = ui["showDaysRemainingToUpdate"] as? Bool ?? showDaysRemainingToUpdate
+            showRequiredDate = ui["showRequiredDate"] as? Bool ?? showRequiredDate
+            simpleMode = ui["simpleMode"] as? Bool ?? simpleMode
+            singleQuitButton = ui["singleQuitButton"] as? Bool ?? singleQuitButton
+            if let elements = ui["updateElements"],
+               let data = try? JSONSerialization.data(withJSONObject: elements, options: [.prettyPrinted, .sortedKeys]),
+               let text = String(data: data, encoding: .utf8) {
+                updateElements = text
+            }
+        }
+
+        jsonPreviewText = jsonPreview
+    }
+
+    private func loadFromModelSelection() {
+        if let data = model.selectedJSONData {
+            loadFromJSONData(data, label: model.selectedJSONPath.isEmpty ? "Selected JSON" : model.selectedJSONPath)
+            return
+        }
+        if let url = model.secureSelectedJSONURL() {
+            loadFromJSON(url: url)
+            return
+        }
+        if !model.selectedJSONPath.isEmpty {
+            loadFromJSON(url: URL(fileURLWithPath: model.selectedJSONPath))
+            return
+        }
+        loadStatus = "No JSON selected."
+    }
+
+    private func joinList(_ value: Any?) -> String {
+        if let array = value as? [String] {
+            return array.joined(separator: ", ")
+        }
+        if let string = value as? String {
+            return string
+        }
+        if let array = value as? [Any] {
+            return array.compactMap { $0 as? String }.joined(separator: ", ")
+        }
+        return ""
+    }
+
+    private func numberString(_ value: Any?) -> String? {
+        if let number = value as? Int {
+            return String(number)
+        }
+        if let number = value as? Double {
+            if number.rounded() == number {
+                return String(Int(number))
+            }
+            return String(number)
+        }
+        if let string = value as? String {
+            return string
+        }
+        return nil
     }
 
     private func saveJSON() {

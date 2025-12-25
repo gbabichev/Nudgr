@@ -9,7 +9,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct ContentView: View {
-    @StateObject var model = NudgeViewModel()
+    @ObservedObject var model: NudgeViewModel
     @Binding var isShowingFileImporter: Bool
     @State private var isShowingInfo: Bool = false
     

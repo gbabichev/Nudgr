@@ -9,19 +9,26 @@ import SwiftUI
 
 @main
 struct NudgeTestToolApp: App {
+    @StateObject private var model = NudgeViewModel()
     @State private var isAboutPresented: Bool = false
     @State private var isShowingFileImporter: Bool = false
     @State private var isShowingJSONBuilder: Bool = false
+    @State private var shouldLoadSelectionInBuilder: Bool = false
     @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
         WindowGroup("Nudgr", id: "main") {
-            ContentView(isShowingFileImporter: $isShowingFileImporter)
+            ContentView(model: model, isShowingFileImporter: $isShowingFileImporter)
                 .sheet(isPresented: $isAboutPresented) {
-                    AboutView()
+                    AboutOverlay(isPresented: $isAboutPresented)
                 }
                 .sheet(isPresented: $isShowingJSONBuilder) {
-                    JSONBuilderSheet(isPresented: $isShowingJSONBuilder)
+                    JSONBuilderSheet(
+                        isPresented: $isShowingJSONBuilder,
+                        model: model,
+                        loadFromSelection: shouldLoadSelectionInBuilder
+                    )
+                        .id((shouldLoadSelectionInBuilder ? "edit" : "new") + "|" + model.selectedJSONPath)
                 }
         }
         .windowStyle(.hiddenTitleBar)
@@ -43,11 +50,20 @@ struct NudgeTestToolApp: App {
             }
             CommandGroup(after: .newItem) {
                 Button {
+                    shouldLoadSelectionInBuilder = false
                     isShowingJSONBuilder = true
                 } label: {
                     Label("New JSON File", systemImage: "doc.badge.plus")
                 }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
+                Button {
+                    shouldLoadSelectionInBuilder = true
+                    model.refreshSelectedJSON()
+                    isShowingJSONBuilder = true
+                } label: {
+                    Label("Edit JSON", systemImage: "pencil")
+                }
+                .disabled(model.selectedJSONPath.isEmpty)
                 Button {
                     isShowingFileImporter = true
                 } label: {
