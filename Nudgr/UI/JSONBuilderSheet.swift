@@ -18,6 +18,7 @@ struct OSVersionRequirementDraft: Identifiable {
     var nonActivelyExploitedCVEsMinorUpdateSLA: String = ""
     var standardMajorUpgradeSLA: String = ""
     var standardMinorUpdateSLA: String = ""
+    var presentKeys: Set<String> = []
 }
 
 struct FieldBlock<Content: View>: View {
@@ -119,6 +120,13 @@ struct JSONBuilderSheet: View {
     @State private var saveError: String = ""
     @State private var loadError: String = ""
     @State private var loadStatus: String = ""
+    @State private var isLoadedFromJSON: Bool = false
+    @State private var optionalFeaturesKeys: Set<String> = []
+    @State private var userExperienceKeys: Set<String> = []
+    @State private var userInterfaceKeys: Set<String> = []
+    @State private var optionalFeaturesTouched: Set<String> = []
+    @State private var userExperienceTouched: Set<String> = []
+    @State private var userInterfaceTouched: Set<String> = []
 
     var body: some View {
         VStack(spacing: 16) {
@@ -219,70 +227,70 @@ struct JSONBuilderSheet: View {
                                 "Acceptable Assertion Usage",
                                 subtitle: "Skip activation while listed apps hold power assertions."
                             ) {
-                                Toggle("", isOn: $acceptableAssertionUsage)
+                                Toggle("", isOn: trackedBoolBinding($acceptableAssertionUsage, key: "acceptableAssertionUsage", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow(
                                 "Acceptable Camera Usage",
                                 subtitle: "Skip activation while camera is in use (ignored after deadline)."
                             ) {
-                                Toggle("", isOn: $acceptableCameraUsage)
+                                Toggle("", isOn: trackedBoolBinding($acceptableCameraUsage, key: "acceptableCameraUsage", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow(
                                 "Acceptable Update Preparing Usage",
                                 subtitle: "Skip activation while updates are downloading or staging."
                             ) {
-                                Toggle("", isOn: $acceptableUpdatePreparingUsage)
+                                Toggle("", isOn: trackedBoolBinding($acceptableUpdatePreparingUsage, key: "acceptableUpdatePreparingUsage", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow(
                                 "Acceptable Screen Sharing Usage",
                                 subtitle: "Skip activation while screen sharing is active (ignored after deadline)."
                             ) {
-                                Toggle("", isOn: $acceptableScreenSharingUsage)
+                                Toggle("", isOn: trackedBoolBinding($acceptableScreenSharingUsage, key: "acceptableScreenSharingUsage", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow(
                                 "Aggressive User Experience",
                                 subtitle: "When off, Nudge won't hide other apps after deadline/deferrals."
                             ) {
-                                Toggle("", isOn: $aggressiveUserExperience)
+                                Toggle("", isOn: trackedBoolBinding($aggressiveUserExperience, key: "aggressiveUserExperience", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow(
                                 "Aggressive Full Screen Experience",
                                 subtitle: "When off, no blurred background after deferral window."
                             ) {
-                                Toggle("", isOn: $aggressiveUserFullScreenExperience)
+                                Toggle("", isOn: trackedBoolBinding($aggressiveUserFullScreenExperience, key: "aggressiveUserFullScreenExperience", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow(
                                 "Asynchronous Software Update",
                                 subtitle: "When off, waits for Software Update downloads before UI."
                             ) {
-                                Toggle("", isOn: $asynchronousSoftwareUpdate)
+                                Toggle("", isOn: trackedBoolBinding($asynchronousSoftwareUpdate, key: "asynchronousSoftwareUpdate", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow(
                                 "Attempt To Block Application Launches",
                                 subtitle: "Blocks listed apps after deadline. Requires blocked bundle IDs."
                             ) {
-                                Toggle("", isOn: $attemptToBlockApplicationLaunches)
+                                Toggle("", isOn: trackedBoolBinding($attemptToBlockApplicationLaunches, key: "attemptToBlockApplicationLaunches", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow(
                                 "Attempt To Check For Supported Device",
                                 subtitle: "When off, skips SOFA support check and Unsupported UI."
                             ) {
-                                Toggle("", isOn: $attemptToCheckForSupportedDevice)
+                                Toggle("", isOn: trackedBoolBinding($attemptToCheckForSupportedDevice, key: "attemptToCheckForSupportedDevice", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow(
                                 "Attempt To Fetch Major Upgrade",
                                 subtitle: "When off, won't download major upgrades via softwareupdate."
                             ) {
-                                Toggle("", isOn: $attemptToFetchMajorUpgrade)
+                                Toggle("", isOn: trackedBoolBinding($attemptToFetchMajorUpgrade, key: "attemptToFetchMajorUpgrade", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
 
@@ -306,51 +314,51 @@ struct JSONBuilderSheet: View {
                                 "Disable Nudge For Standard Installs",
                                 subtitle: "With SOFA, only enforce releases that have CVEs."
                             ) {
-                                Toggle("", isOn: $disableNudgeForStandardInstalls)
+                                Toggle("", isOn: trackedBoolBinding($disableNudgeForStandardInstalls, key: "disableNudgeForStandardInstalls", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow(
                                 "Disable Software Update Workflow",
                                 subtitle: "When on, Nudge won't download minor updates."
                             ) {
-                                Toggle("", isOn: $disableSoftwareUpdateWorkflow)
+                                Toggle("", isOn: trackedBoolBinding($disableSoftwareUpdateWorkflow, key: "disableSoftwareUpdateWorkflow", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow(
                                 "Enforce Minor Updates",
                                 subtitle: "When off, minor updates are not enforced."
                             ) {
-                                Toggle("", isOn: $enforceMinorUpdates)
+                                Toggle("", isOn: trackedBoolBinding($enforceMinorUpdates, key: "enforceMinorUpdates", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow(
                                 "Honor Focus Modes",
                                 subtitle: "Skip activation while in Focus/Do Not Disturb."
                             ) {
-                                Toggle("", isOn: $honorFocusModes)
+                                Toggle("", isOn: trackedBoolBinding($honorFocusModes, key: "honorFocusModes", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
 
-                            FieldBlock(
-                                "Refresh SOFA Feed Time (seconds)",
-                                detail: "Max cache age before SOFA refresh."
-                            ) {
-                                TextField("86400", text: $refreshSOFAFeedTime)
-                                    .textFieldStyle(.roundedBorder)
-                            }
+            FieldBlock(
+                "Refresh SOFA Feed Time (seconds)",
+                detail: "Max cache age before SOFA refresh."
+            ) {
+                TextField("86400", text: trackedTextBinding($refreshSOFAFeedTime, key: "refreshSOFAFeedTime", touched: $optionalFeaturesTouched))
+                    .textFieldStyle(.roundedBorder)
+            }
 
                             SettingsRow(
                                 "Terminate Applications On Launch",
                                 subtitle: "Terminates blocked apps when Nudge launches."
                             ) {
-                                Toggle("", isOn: $terminateApplicationsOnLaunch)
+                                Toggle("", isOn: trackedBoolBinding($terminateApplicationsOnLaunch, key: "terminateApplicationsOnLaunch", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow(
                                 "Utilize SOFA Feed",
                                 subtitle: "Use SOFA feed for update data."
                             ) {
-                                Toggle("", isOn: $utilizeSOFAFeed)
+                                Toggle("", isOn: trackedBoolBinding($utilizeSOFAFeed, key: "utilizeSOFAFeed", touched: $optionalFeaturesTouched))
                                     .toggleStyle(.switch)
                             }
                             }
@@ -488,19 +496,19 @@ struct JSONBuilderSheet: View {
                         GroupBox {
                             VStack(alignment: .leading, spacing: 12) {
                             SettingsRow("Allow Grace Periods") {
-                                Toggle("", isOn: $allowGracePeriods)
+                                Toggle("", isOn: trackedBoolBinding($allowGracePeriods, key: "allowGracePeriods", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow("Allow Later Deferral Button") {
-                                Toggle("", isOn: $allowLaterDeferralButton)
+                                Toggle("", isOn: trackedBoolBinding($allowLaterDeferralButton, key: "allowLaterDeferralButton", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow("Allow Movable Window") {
-                                Toggle("", isOn: $allowMovableWindow)
+                                Toggle("", isOn: trackedBoolBinding($allowMovableWindow, key: "allowMovableWindow", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow("Allow User Quit Deferrals") {
-                                Toggle("", isOn: $allowUserQuitDeferrals)
+                                Toggle("", isOn: trackedBoolBinding($allowUserQuitDeferrals, key: "allowUserQuitDeferrals", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
 
@@ -570,7 +578,7 @@ struct JSONBuilderSheet: View {
                             }
 
                             SettingsRow("Load Launch Agent") {
-                                Toggle("", isOn: $loadLaunchAgent)
+                                Toggle("", isOn: trackedBoolBinding($loadLaunchAgent, key: "loadLaunchAgent", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
 
@@ -580,7 +588,7 @@ struct JSONBuilderSheet: View {
                             }
 
                             SettingsRow("No Timers") {
-                                Toggle("", isOn: $noTimers)
+                                Toggle("", isOn: trackedBoolBinding($noTimers, key: "noTimers", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
 
@@ -600,7 +608,7 @@ struct JSONBuilderSheet: View {
                             }
 
                             SettingsRow("Random Delay") {
-                                Toggle("", isOn: $randomDelay)
+                                Toggle("", isOn: trackedBoolBinding($randomDelay, key: "randomDelay", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
                             }
@@ -614,15 +622,15 @@ struct JSONBuilderSheet: View {
                             TextField("Application Terminated Notification Image Path", text: $applicationTerminatedNotificationImagePath)
                                 .textFieldStyle(.roundedBorder)
                             
-                            TextField("Fallback Language", text: $fallbackLanguage)
+                            TextField("Fallback Language", text: trackedTextBinding($fallbackLanguage, key: "fallbackLanguage", touched: $userInterfaceTouched))
                                 .textFieldStyle(.roundedBorder)
                             
                             SettingsRow("Force Fallback Language") {
-                                Toggle("", isOn: $forceFallbackLanguage)
+                                Toggle("", isOn: trackedBoolBinding($forceFallbackLanguage, key: "forceFallbackLanguage", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow("Force Screen Shot Icon") {
-                                Toggle("", isOn: $forceScreenShotIcon)
+                                Toggle("", isOn: trackedBoolBinding($forceScreenShotIcon, key: "forceScreenShotIcon", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
                             
@@ -642,27 +650,27 @@ struct JSONBuilderSheet: View {
                                 .textFieldStyle(.roundedBorder)
                             
                             SettingsRow("Show Actively Exploited CVEs") {
-                                Toggle("", isOn: $showActivelyExploitedCVEs)
+                                Toggle("", isOn: trackedBoolBinding($showActivelyExploitedCVEs, key: "showActivelyExploitedCVEs", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow("Show Deferral Count") {
-                                Toggle("", isOn: $showDeferralCount)
+                                Toggle("", isOn: trackedBoolBinding($showDeferralCount, key: "showDeferralCount", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow("Show Days Remaining To Update", subtitle: "Disable to hide the Days Remaining To Update item in the UI.") {
-                                Toggle("", isOn: $showDaysRemainingToUpdate)
+                                Toggle("", isOn: trackedBoolBinding($showDaysRemainingToUpdate, key: "showDaysRemainingToUpdate", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow("Show Required Date") {
-                                Toggle("", isOn: $showRequiredDate)
+                                Toggle("", isOn: trackedBoolBinding($showRequiredDate, key: "showRequiredDate", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow("Simple Mode") {
-                                Toggle("", isOn: $simpleMode)
+                                Toggle("", isOn: trackedBoolBinding($simpleMode, key: "simpleMode", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
                             SettingsRow("Single Quit Button") {
-                                Toggle("", isOn: $singleQuitButton)
+                                Toggle("", isOn: trackedBoolBinding($singleQuitButton, key: "singleQuitButton", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
                             
@@ -690,6 +698,8 @@ struct JSONBuilderSheet: View {
         .onAppear {
             if loadFromSelection {
                 loadFromModelSelection()
+            } else {
+                resetLoadTracking()
             }
         }
         .onChange(of: model.selectedJSONPath) { _, _ in
@@ -728,6 +738,40 @@ struct JSONBuilderSheet: View {
         return formatter.string(from: date)
     }
 
+    private func resetLoadTracking() {
+        isLoadedFromJSON = false
+        optionalFeaturesKeys = []
+        userExperienceKeys = []
+        userInterfaceKeys = []
+        optionalFeaturesTouched = []
+        userExperienceTouched = []
+        userInterfaceTouched = []
+    }
+
+    private func shouldIncludeKey(_ key: String, keys: Set<String>, touched: Set<String>) -> Bool {
+        return keys.contains(key) || touched.contains(key)
+    }
+
+    private func trackedBoolBinding(_ binding: Binding<Bool>, key: String, touched: Binding<Set<String>>) -> Binding<Bool> {
+        Binding(
+            get: { binding.wrappedValue },
+            set: { newValue in
+                binding.wrappedValue = newValue
+                touched.wrappedValue.insert(key)
+            }
+        )
+    }
+
+    private func trackedTextBinding(_ binding: Binding<String>, key: String, touched: Binding<Set<String>>) -> Binding<String> {
+        Binding(
+            get: { binding.wrappedValue },
+            set: { newValue in
+                binding.wrappedValue = newValue
+                touched.wrappedValue.insert(key)
+            }
+        )
+    }
+
     private func loadFromJSON(url: URL) {
         loadError = ""
         loadStatus = ""
@@ -759,10 +803,18 @@ struct JSONBuilderSheet: View {
             loadError = "Load failed: Root JSON must be an object."
             return
         }
+        isLoadedFromJSON = true
+        optionalFeaturesTouched = []
+        userExperienceTouched = []
+        userInterfaceTouched = []
+        optionalFeaturesKeys = []
+        userExperienceKeys = []
+        userInterfaceKeys = []
         let keyList = root.keys.sorted().joined(separator: ", ")
         loadStatus = "Loaded JSON: \(label) (keys: \(keyList))"
 
         if let optional = root["optionalFeatures"] as? [String: Any] {
+            optionalFeaturesKeys = Set(optional.keys)
             acceptableApplicationBundleIDs = joinList(optional["acceptableApplicationBundleIDs"])
             acceptableAssertionApplicationNames = joinList(optional["acceptableAssertionApplicationNames"])
             acceptableAssertionUsage = optional["acceptableAssertionUsage"] as? Bool ?? acceptableAssertionUsage
@@ -789,6 +841,7 @@ struct JSONBuilderSheet: View {
         if let requirements = root["osVersionRequirements"] as? [[String: Any]] {
             let drafts = requirements.map { item -> OSVersionRequirementDraft in
                 var draft = OSVersionRequirementDraft()
+                draft.presentKeys = Set(item.keys)
                 if let value = item["requiredMinimumOSVersion"] as? String {
                     draft.requiredMinimumOSVersion = value
                 }
@@ -840,6 +893,7 @@ struct JSONBuilderSheet: View {
         }
 
         if let experience = root["userExperience"] as? [String: Any] {
+            userExperienceKeys = Set(experience.keys)
             allowGracePeriods = experience["allowGracePeriods"] as? Bool ?? allowGracePeriods
             allowLaterDeferralButton = experience["allowLaterDeferralButton"] as? Bool ?? allowLaterDeferralButton
             allowMovableWindow = experience["allowMovableWindow"] as? Bool ?? allowMovableWindow
@@ -867,6 +921,7 @@ struct JSONBuilderSheet: View {
         }
 
         if let ui = root["userInterface"] as? [String: Any] {
+            userInterfaceKeys = Set(ui.keys)
             applicationTerminatedNotificationImagePath = ui["applicationTerminatedNotificationImagePath"] as? String ?? applicationTerminatedNotificationImagePath
             fallbackLanguage = ui["fallbackLanguage"] as? String ?? fallbackLanguage
             forceFallbackLanguage = ui["forceFallbackLanguage"] as? Bool ?? forceFallbackLanguage
@@ -988,31 +1043,80 @@ struct JSONBuilderSheet: View {
 
     private func buildOptionalFeatures() -> [String: Any] {
         var dict: [String: Any] = [:]
-        dict["acceptableApplicationBundleIDs"] = parseList(acceptableApplicationBundleIDs)
-        dict["acceptableAssertionApplicationNames"] = parseList(acceptableAssertionApplicationNames)
-        dict["acceptableAssertionUsage"] = acceptableAssertionUsage
-        dict["acceptableCameraUsage"] = acceptableCameraUsage
-        dict["acceptableUpdatePreparingUsage"] = acceptableUpdatePreparingUsage
-        dict["acceptableScreenSharingUsage"] = acceptableScreenSharingUsage
-        dict["aggressiveUserExperience"] = aggressiveUserExperience
-        dict["aggressiveUserFullScreenExperience"] = aggressiveUserFullScreenExperience
-        dict["asynchronousSoftwareUpdate"] = asynchronousSoftwareUpdate
-        dict["attemptToBlockApplicationLaunches"] = attemptToBlockApplicationLaunches
-        dict["attemptToCheckForSupportedDevice"] = attemptToCheckForSupportedDevice
-        dict["attemptToFetchMajorUpgrade"] = attemptToFetchMajorUpgrade
-        dict["blockedApplicationBundleIDs"] = parseList(blockedApplicationBundleIDs)
-        if !customSOFAFeedURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            dict["customSOFAFeedURL"] = customSOFAFeedURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        let includeOptional: (String) -> Bool = { key in
+            shouldIncludeKey(key, keys: optionalFeaturesKeys, touched: optionalFeaturesTouched)
         }
-        dict["disableNudgeForStandardInstalls"] = disableNudgeForStandardInstalls
-        dict["disableSoftwareUpdateWorkflow"] = disableSoftwareUpdateWorkflow
-        dict["enforceMinorUpdates"] = enforceMinorUpdates
-        dict["honorFocusModes"] = honorFocusModes
-        if let refresh = Int(refreshSOFAFeedTime.trimmingCharacters(in: .whitespacesAndNewlines)) {
-            dict["refreshSOFAFeedTime"] = refresh
+
+        let acceptableBundleIDs = parseList(acceptableApplicationBundleIDs)
+        if !isLoadedFromJSON || includeOptional("acceptableApplicationBundleIDs") || !acceptableBundleIDs.isEmpty {
+            dict["acceptableApplicationBundleIDs"] = acceptableBundleIDs
         }
-        dict["terminateApplicationsOnLaunch"] = terminateApplicationsOnLaunch
-        dict["utilizeSOFAFeed"] = utilizeSOFAFeed
+        let acceptableAssertionNames = parseList(acceptableAssertionApplicationNames)
+        if !isLoadedFromJSON || includeOptional("acceptableAssertionApplicationNames") || !acceptableAssertionNames.isEmpty {
+            dict["acceptableAssertionApplicationNames"] = acceptableAssertionNames
+        }
+        if !isLoadedFromJSON || includeOptional("acceptableAssertionUsage") {
+            dict["acceptableAssertionUsage"] = acceptableAssertionUsage
+        }
+        if !isLoadedFromJSON || includeOptional("acceptableCameraUsage") {
+            dict["acceptableCameraUsage"] = acceptableCameraUsage
+        }
+        if !isLoadedFromJSON || includeOptional("acceptableUpdatePreparingUsage") {
+            dict["acceptableUpdatePreparingUsage"] = acceptableUpdatePreparingUsage
+        }
+        if !isLoadedFromJSON || includeOptional("acceptableScreenSharingUsage") {
+            dict["acceptableScreenSharingUsage"] = acceptableScreenSharingUsage
+        }
+        if !isLoadedFromJSON || includeOptional("aggressiveUserExperience") {
+            dict["aggressiveUserExperience"] = aggressiveUserExperience
+        }
+        if !isLoadedFromJSON || includeOptional("aggressiveUserFullScreenExperience") {
+            dict["aggressiveUserFullScreenExperience"] = aggressiveUserFullScreenExperience
+        }
+        if !isLoadedFromJSON || includeOptional("asynchronousSoftwareUpdate") {
+            dict["asynchronousSoftwareUpdate"] = asynchronousSoftwareUpdate
+        }
+        if !isLoadedFromJSON || includeOptional("attemptToBlockApplicationLaunches") {
+            dict["attemptToBlockApplicationLaunches"] = attemptToBlockApplicationLaunches
+        }
+        if !isLoadedFromJSON || includeOptional("attemptToCheckForSupportedDevice") {
+            dict["attemptToCheckForSupportedDevice"] = attemptToCheckForSupportedDevice
+        }
+        if !isLoadedFromJSON || includeOptional("attemptToFetchMajorUpgrade") {
+            dict["attemptToFetchMajorUpgrade"] = attemptToFetchMajorUpgrade
+        }
+        let blockedBundleIDs = parseList(blockedApplicationBundleIDs)
+        if !isLoadedFromJSON || includeOptional("blockedApplicationBundleIDs") || !blockedBundleIDs.isEmpty {
+            dict["blockedApplicationBundleIDs"] = blockedBundleIDs
+        }
+        let customSOFA = customSOFAFeedURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !customSOFA.isEmpty || (isLoadedFromJSON && includeOptional("customSOFAFeedURL")) {
+            dict["customSOFAFeedURL"] = customSOFA
+        }
+        if !isLoadedFromJSON || includeOptional("disableNudgeForStandardInstalls") {
+            dict["disableNudgeForStandardInstalls"] = disableNudgeForStandardInstalls
+        }
+        if !isLoadedFromJSON || includeOptional("disableSoftwareUpdateWorkflow") {
+            dict["disableSoftwareUpdateWorkflow"] = disableSoftwareUpdateWorkflow
+        }
+        if !isLoadedFromJSON || includeOptional("enforceMinorUpdates") {
+            dict["enforceMinorUpdates"] = enforceMinorUpdates
+        }
+        if !isLoadedFromJSON || includeOptional("honorFocusModes") {
+            dict["honorFocusModes"] = honorFocusModes
+        }
+        let refresh = refreshSOFAFeedTime.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !isLoadedFromJSON || includeOptional("refreshSOFAFeedTime") {
+            if let refreshValue = Int(refresh) {
+                dict["refreshSOFAFeedTime"] = refreshValue
+            }
+        }
+        if !isLoadedFromJSON || includeOptional("terminateApplicationsOnLaunch") {
+            dict["terminateApplicationsOnLaunch"] = terminateApplicationsOnLaunch
+        }
+        if !isLoadedFromJSON || includeOptional("utilizeSOFAFeed") {
+            dict["utilizeSOFAFeed"] = utilizeSOFAFeed
+        }
         return dict
     }
 
@@ -1021,64 +1125,65 @@ struct JSONBuilderSheet: View {
             let required = item.requiredMinimumOSVersion.trimmingCharacters(in: .whitespacesAndNewlines)
             if required.isEmpty { return nil }
             var dict: [String: Any] = ["requiredMinimumOSVersion": required]
+            let presentKeys = item.presentKeys
 
             let requiredDate = item.requiredInstallationDate.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !requiredDate.isEmpty {
+            if !requiredDate.isEmpty || presentKeys.contains("requiredInstallationDate") {
                 dict["requiredInstallationDate"] = requiredDate
             }
 
             let rule = item.targetedOSVersionsRule.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !rule.isEmpty {
+            if (!isLoadedFromJSON && !rule.isEmpty) || presentKeys.contains("targetedOSVersionsRule") || rule != "default" {
                 dict["targetedOSVersionsRule"] = rule
             }
 
             let aboutURL = item.aboutUpdateURL.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !aboutURL.isEmpty {
+            if !aboutURL.isEmpty || presentKeys.contains("aboutUpdateURL") {
                 dict["aboutUpdateURL"] = aboutURL
             }
 
             let aboutURLs = parseLangURLList(item.aboutUpdateURLs)
-            if !aboutURLs.isEmpty {
+            if !aboutURLs.isEmpty || presentKeys.contains("aboutUpdateURLs") {
                 dict["aboutUpdateURLs"] = aboutURLs
             }
 
             let actionPaths = parseList(item.actionButtonPath)
-            if !actionPaths.isEmpty {
+            if !actionPaths.isEmpty || presentKeys.contains("actionButtonPath") {
                 dict["actionButtonPath"] = actionPaths
             }
 
             let majorUpgradePath = item.majorUpgradeAppPath.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !majorUpgradePath.isEmpty {
+            if !majorUpgradePath.isEmpty || presentKeys.contains("majorUpgradeAppPath") {
                 dict["majorUpgradeAppPath"] = majorUpgradePath
             }
 
             let activeMajor = item.activelyExploitedCVEsMajorUpgradeSLA.trimmingCharacters(in: .whitespacesAndNewlines)
-            if let value = Int(activeMajor) {
+            if let value = Int(activeMajor), (!activeMajor.isEmpty || presentKeys.contains("activelyExploitedCVEsMajorUpgradeSLA")) {
                 dict["activelyExploitedCVEsMajorUpgradeSLA"] = value
             }
 
             let activeMinor = item.activelyExploitedCVEsMinorUpdateSLA.trimmingCharacters(in: .whitespacesAndNewlines)
-            if let value = Int(activeMinor) {
+            if let value = Int(activeMinor), (!activeMinor.isEmpty || presentKeys.contains("activelyExploitedCVEsMinorUpdateSLA")) {
                 dict["activelyExploitedCVEsMinorUpdateSLA"] = value
             }
 
             let nonActiveMajor = item.nonActivelyExploitedCVEsMajorUpgradeSLA.trimmingCharacters(in: .whitespacesAndNewlines)
-            if let value = Int(nonActiveMajor) {
+            if let value = Int(nonActiveMajor), (!nonActiveMajor.isEmpty || presentKeys.contains("nonActivelyExploitedCVEsMajorUpgradeSLA")) {
                 dict["nonActivelyExploitedCVEsMajorUpgradeSLA"] = value
             }
 
             let nonActiveMinor = item.nonActivelyExploitedCVEsMinorUpdateSLA.trimmingCharacters(in: .whitespacesAndNewlines)
-            if let value = Int(nonActiveMinor) {
+            if let value = Int(nonActiveMinor), (!nonActiveMinor.isEmpty || presentKeys.contains("nonActivelyExploitedCVEsMinorUpdateSLA")) {
                 dict["nonActivelyExploitedCVEsMinorUpdateSLA"] = value
             }
 
             let standardMajor = item.standardMajorUpgradeSLA.trimmingCharacters(in: .whitespacesAndNewlines)
-            if let value = Int(standardMajor) {
+            if let value = Int(standardMajor), (!standardMajor.isEmpty || presentKeys.contains("standardMajorUpgradeSLA")) {
                 dict["standardMajorUpgradeSLA"] = value
             }
 
             let standardMinor = item.standardMinorUpdateSLA.trimmingCharacters(in: .whitespacesAndNewlines)
-            if let value = Int(standardMinor) {
+            if let value = Int(standardMinor), (!standardMinor.isEmpty || presentKeys.contains("standardMinorUpdateSLA")) {
                 dict["standardMinorUpdateSLA"] = value
             }
 
@@ -1089,108 +1194,173 @@ struct JSONBuilderSheet: View {
 
     private func buildUserExperience() -> [String: Any] {
         var dict: [String: Any] = [:]
-        dict["allowGracePeriods"] = allowGracePeriods
-        dict["allowLaterDeferralButton"] = allowLaterDeferralButton
-        dict["allowMovableWindow"] = allowMovableWindow
-        dict["allowUserQuitDeferrals"] = allowUserQuitDeferrals
-        if let value = Int(allowedDeferrals.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        let includeExperience: (String) -> Bool = { key in
+            shouldIncludeKey(key, keys: userExperienceKeys, touched: userExperienceTouched)
+        }
+
+        if !isLoadedFromJSON || includeExperience("allowGracePeriods") {
+            dict["allowGracePeriods"] = allowGracePeriods
+        }
+        if !isLoadedFromJSON || includeExperience("allowLaterDeferralButton") {
+            dict["allowLaterDeferralButton"] = allowLaterDeferralButton
+        }
+        if !isLoadedFromJSON || includeExperience("allowMovableWindow") {
+            dict["allowMovableWindow"] = allowMovableWindow
+        }
+        if !isLoadedFromJSON || includeExperience("allowUserQuitDeferrals") {
+            dict["allowUserQuitDeferrals"] = allowUserQuitDeferrals
+        }
+        let allowedDeferralsValue = allowedDeferrals.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(allowedDeferralsValue),
+           !allowedDeferralsValue.isEmpty || (isLoadedFromJSON && includeExperience("allowedDeferrals")) || !isLoadedFromJSON {
             dict["allowedDeferrals"] = value
         }
-        if let value = Int(allowedDeferralsUntilForcedSecondaryQuitButton.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        let allowedDeferralsSecondaryValue = allowedDeferralsUntilForcedSecondaryQuitButton.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(allowedDeferralsSecondaryValue),
+           !allowedDeferralsSecondaryValue.isEmpty || (isLoadedFromJSON && includeExperience("allowedDeferralsUntilForcedSecondaryQuitButton")) || !isLoadedFromJSON {
             dict["allowedDeferralsUntilForcedSecondaryQuitButton"] = value
         }
-        if let value = Int(approachingRefreshCycle.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        let approachingRefreshValue = approachingRefreshCycle.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(approachingRefreshValue),
+           !approachingRefreshValue.isEmpty || (isLoadedFromJSON && includeExperience("approachingRefreshCycle")) || !isLoadedFromJSON {
             dict["approachingRefreshCycle"] = value
         }
-        if let value = Int(approachingWindowTime.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        let approachingWindowValue = approachingWindowTime.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(approachingWindowValue),
+           !approachingWindowValue.isEmpty || (isLoadedFromJSON && includeExperience("approachingWindowTime")) || !isLoadedFromJSON {
             dict["approachingWindowTime"] = value
         }
         let calendarUnit = calendarDeferralUnit.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !calendarUnit.isEmpty {
+        if !calendarUnit.isEmpty || (isLoadedFromJSON && includeExperience("calendarDeferralUnit")) {
             dict["calendarDeferralUnit"] = calendarUnit
         }
-        if let value = Int(elapsedRefreshCycle.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        let elapsedRefreshValue = elapsedRefreshCycle.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(elapsedRefreshValue),
+           !elapsedRefreshValue.isEmpty || (isLoadedFromJSON && includeExperience("elapsedRefreshCycle")) || !isLoadedFromJSON {
             dict["elapsedRefreshCycle"] = value
         }
-        if let value = Int(gracePeriodInstallDelay.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        let graceInstallValue = gracePeriodInstallDelay.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(graceInstallValue),
+           !graceInstallValue.isEmpty || (isLoadedFromJSON && includeExperience("gracePeriodInstallDelay")) || !isLoadedFromJSON {
             dict["gracePeriodInstallDelay"] = value
         }
-        if let value = Int(gracePeriodLaunchDelay.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        let graceLaunchValue = gracePeriodLaunchDelay.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(graceLaunchValue),
+           !graceLaunchValue.isEmpty || (isLoadedFromJSON && includeExperience("gracePeriodLaunchDelay")) || !isLoadedFromJSON {
             dict["gracePeriodLaunchDelay"] = value
         }
         let gracePath = gracePeriodPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !gracePath.isEmpty {
+        if !gracePath.isEmpty || (isLoadedFromJSON && includeExperience("gracePeriodPath")) {
             dict["gracePeriodPath"] = gracePath
         }
-        if let value = Int(imminentRefreshCycle.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        let imminentRefreshValue = imminentRefreshCycle.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(imminentRefreshValue),
+           !imminentRefreshValue.isEmpty || (isLoadedFromJSON && includeExperience("imminentRefreshCycle")) || !isLoadedFromJSON {
             dict["imminentRefreshCycle"] = value
         }
-        if let value = Int(imminentWindowTime.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        let imminentWindowValue = imminentWindowTime.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(imminentWindowValue),
+           !imminentWindowValue.isEmpty || (isLoadedFromJSON && includeExperience("imminentWindowTime")) || !isLoadedFromJSON {
             dict["imminentWindowTime"] = value
         }
-        if let value = Int(initialRefreshCycle.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        let initialRefreshValue = initialRefreshCycle.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(initialRefreshValue),
+           !initialRefreshValue.isEmpty || (isLoadedFromJSON && includeExperience("initialRefreshCycle")) || !isLoadedFromJSON {
             dict["initialRefreshCycle"] = value
         }
         let identifier = launchAgentIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !identifier.isEmpty {
+        if !identifier.isEmpty || (isLoadedFromJSON && includeExperience("launchAgentIdentifier")) {
             dict["launchAgentIdentifier"] = identifier
         }
-        dict["loadLaunchAgent"] = loadLaunchAgent
-        if let value = Int(maxRandomDelayInSeconds.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        if !isLoadedFromJSON || includeExperience("loadLaunchAgent") {
+            dict["loadLaunchAgent"] = loadLaunchAgent
+        }
+        let maxRandomDelayValue = maxRandomDelayInSeconds.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(maxRandomDelayValue),
+           !maxRandomDelayValue.isEmpty || (isLoadedFromJSON && includeExperience("maxRandomDelayInSeconds")) || !isLoadedFromJSON {
             dict["maxRandomDelayInSeconds"] = value
         }
-        dict["noTimers"] = noTimers
-        if let value = Int(nudgeMajorUpgradeEventLaunchDelay.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        if !isLoadedFromJSON || includeExperience("noTimers") {
+            dict["noTimers"] = noTimers
+        }
+        let majorDelayValue = nudgeMajorUpgradeEventLaunchDelay.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(majorDelayValue),
+           !majorDelayValue.isEmpty || (isLoadedFromJSON && includeExperience("nudgeMajorUpgradeEventLaunchDelay")) || !isLoadedFromJSON {
             dict["nudgeMajorUpgradeEventLaunchDelay"] = value
         }
-        if let value = Int(nudgeMinorUpdateEventLaunchDelay.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        let minorDelayValue = nudgeMinorUpdateEventLaunchDelay.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(minorDelayValue),
+           !minorDelayValue.isEmpty || (isLoadedFromJSON && includeExperience("nudgeMinorUpdateEventLaunchDelay")) || !isLoadedFromJSON {
             dict["nudgeMinorUpdateEventLaunchDelay"] = value
         }
-        if let value = Int(nudgeRefreshCycle.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        let refreshCycleValue = nudgeRefreshCycle.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(refreshCycleValue),
+           !refreshCycleValue.isEmpty || (isLoadedFromJSON && includeExperience("nudgeRefreshCycle")) || !isLoadedFromJSON {
             dict["nudgeRefreshCycle"] = value
         }
-        dict["randomDelay"] = randomDelay
+        if !isLoadedFromJSON || includeExperience("randomDelay") {
+            dict["randomDelay"] = randomDelay
+        }
         return dict
     }
     
     private func buildUserInterface() -> [String: Any] {
         var dict: [String: Any] = [:]
+        let includeInterface: (String) -> Bool = { key in
+            shouldIncludeKey(key, keys: userInterfaceKeys, touched: userInterfaceTouched)
+        }
         let terminatedPath = applicationTerminatedNotificationImagePath.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !terminatedPath.isEmpty {
+        if !terminatedPath.isEmpty || (isLoadedFromJSON && includeInterface("applicationTerminatedNotificationImagePath")) {
             dict["applicationTerminatedNotificationImagePath"] = terminatedPath
         }
         let fallback = fallbackLanguage.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !fallback.isEmpty {
+        if includeInterface("fallbackLanguage") || (!fallback.isEmpty && !isLoadedFromJSON) {
             dict["fallbackLanguage"] = fallback
         }
-        dict["forceFallbackLanguage"] = forceFallbackLanguage
-        dict["forceScreenShotIcon"] = forceScreenShotIcon
+        if !isLoadedFromJSON || includeInterface("forceFallbackLanguage") {
+            dict["forceFallbackLanguage"] = forceFallbackLanguage
+        }
+        if !isLoadedFromJSON || includeInterface("forceScreenShotIcon") {
+            dict["forceScreenShotIcon"] = forceScreenShotIcon
+        }
         let iconDark = iconDarkPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !iconDark.isEmpty {
+        if !iconDark.isEmpty || (isLoadedFromJSON && includeInterface("iconDarkPath")) {
             dict["iconDarkPath"] = iconDark
         }
         let iconLight = iconLightPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !iconLight.isEmpty {
+        if !iconLight.isEmpty || (isLoadedFromJSON && includeInterface("iconLightPath")) {
             dict["iconLightPath"] = iconLight
         }
         let format = requiredInstallationDisplayFormat.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !format.isEmpty {
+        if !format.isEmpty || (isLoadedFromJSON && includeInterface("requiredInstallationDisplayFormat")) {
             dict["requiredInstallationDisplayFormat"] = format
         }
         let screenDark = screenShotDarkPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !screenDark.isEmpty {
+        if !screenDark.isEmpty || (isLoadedFromJSON && includeInterface("screenShotDarkPath")) {
             dict["screenShotDarkPath"] = screenDark
         }
         let screenLight = screenShotLightPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !screenLight.isEmpty {
+        if !screenLight.isEmpty || (isLoadedFromJSON && includeInterface("screenShotLightPath")) {
             dict["screenShotLightPath"] = screenLight
         }
-        dict["showActivelyExploitedCVEs"] = showActivelyExploitedCVEs
-        dict["showDeferralCount"] = showDeferralCount
-        dict["showDaysRemainingToUpdate"] = showDaysRemainingToUpdate
-        dict["showRequiredDate"] = showRequiredDate
-        dict["simpleMode"] = simpleMode
-        dict["singleQuitButton"] = singleQuitButton
+        if !isLoadedFromJSON || includeInterface("showActivelyExploitedCVEs") {
+            dict["showActivelyExploitedCVEs"] = showActivelyExploitedCVEs
+        }
+        if !isLoadedFromJSON || includeInterface("showDeferralCount") {
+            dict["showDeferralCount"] = showDeferralCount
+        }
+        if !isLoadedFromJSON || includeInterface("showDaysRemainingToUpdate") {
+            dict["showDaysRemainingToUpdate"] = showDaysRemainingToUpdate
+        }
+        if !isLoadedFromJSON || includeInterface("showRequiredDate") {
+            dict["showRequiredDate"] = showRequiredDate
+        }
+        if !isLoadedFromJSON || includeInterface("simpleMode") {
+            dict["simpleMode"] = simpleMode
+        }
+        if !isLoadedFromJSON || includeInterface("singleQuitButton") {
+            dict["singleQuitButton"] = singleQuitButton
+        }
         let updateElementsValue = updateElements.trimmingCharacters(in: .whitespacesAndNewlines)
         if !updateElementsValue.isEmpty,
            let data = updateElementsValue.data(using: .utf8),
