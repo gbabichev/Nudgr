@@ -409,6 +409,10 @@ struct JSONBuilderSheet: View {
                                                 setRequiredDateNow(for: requirement.id)
                                             }
                                             .buttonStyle(.bordered)
+                                            Button("Today (00:00)") {
+                                                setRequiredDateToday(for: requirement.id)
+                                            }
+                                            .buttonStyle(.bordered)
                                         }
                                     }
 
@@ -738,6 +742,17 @@ struct JSONBuilderSheet: View {
         let now = iso8601ZuluString(from: Date())
         guard let index = osVersionRequirements.firstIndex(where: { $0.id == id }) else { return }
         osVersionRequirements[index].requiredInstallationDate = now
+    }
+
+    private func setRequiredDateToday(for id: UUID) {
+        let calendar = Calendar(identifier: .gregorian)
+        var utcCalendar = calendar
+        utcCalendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+        let now = Date()
+        let startOfDay = utcCalendar.startOfDay(for: now)
+        let formatted = iso8601ZuluString(from: startOfDay)
+        guard let index = osVersionRequirements.firstIndex(where: { $0.id == id }) else { return }
+        osVersionRequirements[index].requiredInstallationDate = formatted
     }
 
     private func iso8601ZuluString(from date: Date) -> String {
