@@ -12,26 +12,27 @@ struct NudgeTestToolApp: App {
     @StateObject private var model = NudgeViewModel()
     @State private var isAboutPresented: Bool = false
     @State private var isShowingFileImporter: Bool = false
-    @State private var isShowingJSONBuilder: Bool = false
     @State private var shouldLoadSelectionInBuilder: Bool = false
     @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
         WindowGroup("Nudgr", id: "main") {
-            ContentView(model: model, isShowingFileImporter: $isShowingFileImporter)
+            ContentView(
+                model: model,
+                isShowingFileImporter: $isShowingFileImporter,
+                shouldLoadSelectionInBuilder: $shouldLoadSelectionInBuilder
+            )
                 .sheet(isPresented: $isAboutPresented) {
                     AboutOverlay(isPresented: $isAboutPresented)
                 }
-                .sheet(isPresented: $isShowingJSONBuilder) {
-                    JSONBuilderSheet(
-                        isPresented: $isShowingJSONBuilder,
-                        model: model,
-                        loadFromSelection: shouldLoadSelectionInBuilder
-                    )
-                        .id((shouldLoadSelectionInBuilder ? "edit" : "new") + "|" + model.selectedJSONPath)
-                }
         }
         .windowStyle(.hiddenTitleBar)
+        WindowGroup("JSON Builder", id: "json-builder") {
+            JSONBuilderSheet(
+                model: model,
+                loadFromSelection: $shouldLoadSelectionInBuilder
+            )
+        }
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button {
@@ -51,7 +52,7 @@ struct NudgeTestToolApp: App {
             CommandGroup(after: .newItem) {
                 Button {
                     shouldLoadSelectionInBuilder = false
-                    isShowingJSONBuilder = true
+                    openWindow(id: "json-builder")
                 } label: {
                     Label("New JSON File", systemImage: "doc.badge.plus")
                 }
@@ -59,7 +60,7 @@ struct NudgeTestToolApp: App {
                 Button {
                     shouldLoadSelectionInBuilder = true
                     model.refreshSelectedJSON()
-                    isShowingJSONBuilder = true
+                    openWindow(id: "json-builder")
                 } label: {
                     Label("Edit JSON", systemImage: "pencil")
                 }

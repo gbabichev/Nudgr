@@ -11,7 +11,9 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @ObservedObject var model: NudgeViewModel
     @Binding var isShowingFileImporter: Bool
+    @Binding var shouldLoadSelectionInBuilder: Bool
     @State private var isShowingInfo: Bool = false
+    @Environment(\.openWindow) private var openWindow
     
     var body: some View {
         HStack(alignment: .top, spacing: 24) {
@@ -393,9 +395,19 @@ struct ContentView: View {
                 Button {
                     isShowingFileImporter = true
                 } label: {
-                    Label("Select JSON", systemImage: "text.document")
+                    Label("Select JSON", systemImage: "folder")
                 }
                 .buttonStyle(.bordered)
+
+                Button {
+                    shouldLoadSelectionInBuilder = true
+                    model.refreshSelectedJSON()
+                    openWindow(id: "json-builder")
+                } label: {
+                    Label("Edit JSON", systemImage: "pencil")
+                }
+                .buttonStyle(.bordered)
+                .disabled(model.selectedJSONPath.isEmpty)
             }
             
             ToolbarItemGroup(placement: .status) {

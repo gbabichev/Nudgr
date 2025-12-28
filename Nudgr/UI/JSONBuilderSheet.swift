@@ -47,9 +47,9 @@ struct FieldBlock<Content: View>: View {
 }
 
 struct JSONBuilderSheet: View {
-    @Binding var isPresented: Bool
+    @Environment(\.dismiss) private var dismissView
     @ObservedObject var model: NudgeViewModel
-    let loadFromSelection: Bool
+    @Binding var loadFromSelection: Bool
     @State private var acceptableApplicationBundleIDs: String = ""
     @State private var acceptableAssertionApplicationNames: String = ""
     @State private var acceptableAssertionUsage: Bool = false
@@ -153,47 +153,6 @@ struct JSONBuilderSheet: View {
                 .foregroundStyle(.red)
                 .font(.footnote)
 
-            HStack(spacing: 8) {
-                Button("Expand All") {
-                    setSectionsExpanded(true)
-                }
-                .buttonStyle(.bordered)
-
-                Button("Collapse All") {
-                    setSectionsExpanded(false)
-                }
-                .buttonStyle(.bordered)
-
-                Spacer()
-
-                Button {
-                    saveJSON()
-                } label: {
-                    Label("Save As", systemImage: "square.and.arrow.down")
-                }
-                .buttonStyle(.bordered)
-
-                Button {
-                    saveLoadedJSON()
-                } label: {
-                    Label("Save JSON", systemImage: "square.and.arrow.down")
-                }
-                .buttonStyle(.bordered)
-                .disabled(loadedJSONURL == nil)
-
-                Button {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(jsonPreview, forType: .string)
-                } label: {
-                    Label("Copy JSON", systemImage: "doc.on.doc")
-                }
-                .buttonStyle(.bordered)
-
-//                Button("Close") {
-//                    dismiss()
-//                }
-//                .buttonStyle(.borderedProminent)
-            }
             
             if !saveError.isEmpty {
                 Text(saveError)
@@ -751,8 +710,44 @@ struct JSONBuilderSheet: View {
         }
         .padding(24)
         .frame(minWidth: 640, minHeight: 520)
+        .toolbar {
+            ToolbarItemGroup(placement: .navigation) {
+                Button("Expand All") {
+                    setSectionsExpanded(true)
+                }
+                Button("Collapse All") {
+                    setSectionsExpanded(false)
+                }
+            }
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button {
+                    saveJSON()
+                } label: {
+                    Label("Save As", systemImage: "square.and.arrow.down")
+                }
+                Button {
+                    saveLoadedJSON()
+                } label: {
+                    Label("Save JSON", systemImage: "square.and.arrow.down")
+                }
+                .disabled(loadedJSONURL == nil)
+                Button {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(jsonPreview, forType: .string)
+                } label: {
+                    Label("Copy JSON", systemImage: "doc.on.doc")
+                }
+            }
+        }
         .onAppear {
             if loadFromSelection {
+                loadFromModelSelection()
+            } else {
+                resetLoadTracking()
+            }
+        }
+        .onChange(of: loadFromSelection) { _, newValue in
+            if newValue {
                 loadFromModelSelection()
             } else {
                 resetLoadTracking()
@@ -767,7 +762,7 @@ struct JSONBuilderSheet: View {
 
     private func dismiss() {
         withAnimation(.easeInOut(duration: 0.2)) {
-            isPresented = false
+            dismissView()
         }
     }
 
