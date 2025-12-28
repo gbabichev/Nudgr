@@ -408,6 +408,14 @@ struct ContentView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(model.selectedJSONPath.isEmpty)
+
+                Button {
+                    shouldLoadSelectionInBuilder = false
+                    openWindow(id: "json-builder")
+                } label: {
+                    Label("New JSON", systemImage: "doc.badge.plus")
+                }
+                .buttonStyle(.bordered)
             }
             
             ToolbarItemGroup(placement: .status) {

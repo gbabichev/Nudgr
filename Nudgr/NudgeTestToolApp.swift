@@ -27,11 +27,12 @@ struct NudgeTestToolApp: App {
                 }
         }
         .windowStyle(.hiddenTitleBar)
-        WindowGroup("JSON Builder", id: "json-builder") {
+        Window("JSON Builder", id: "json-builder") {
             JSONBuilderSheet(
                 model: model,
                 loadFromSelection: $shouldLoadSelectionInBuilder
             )
+            .id((shouldLoadSelectionInBuilder ? "edit" : "new") + "|" + model.selectedJSONPath)
         }
         .commands {
             CommandGroup(replacing: .appInfo) {
