@@ -46,7 +46,7 @@ struct FieldBlock<Content: View>: View {
     }
 }
 
-struct JSONBuilderSheet: View {
+struct JSONBuilder: View {
     @Environment(\.dismiss) private var dismissView
     @ObservedObject var model: NudgeViewModel
     @Binding var loadFromSelection: Bool
@@ -122,6 +122,7 @@ struct JSONBuilderSheet: View {
     @State private var loadStatus: String = ""
     @State private var isLoadedFromJSON: Bool = false
     @State private var loadedJSONURL: URL?
+    @State private var showCopyToast: Bool = false
     @State private var optionalFeaturesKeys: Set<String> = []
     @State private var userExperienceKeys: Set<String> = []
     @State private var userInterfaceKeys: Set<String> = []
@@ -710,6 +711,17 @@ struct JSONBuilderSheet: View {
         }
         .padding(24)
         .frame(minWidth: 640, minHeight: 520)
+        .overlay(alignment: .top) {
+            if showCopyToast {
+                Text("JSON Copied to Clipboard")
+                    .font(.footnote.weight(.semibold))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.regularMaterial, in: Capsule())
+                    .transition(.opacity)
+                    .padding(.top, 8)
+            }
+        }
         .toolbar {
             ToolbarItemGroup(placement: .navigation) {
                 Button("Expand All") {
@@ -721,19 +733,22 @@ struct JSONBuilderSheet: View {
             }
             ToolbarItemGroup(placement: .primaryAction) {
                 Button {
-                    saveJSON()
-                } label: {
-                    Label("Save As", systemImage: "square.and.arrow.down")
-                }
-                Button {
                     saveLoadedJSON()
                 } label: {
                     Label("Save JSON", systemImage: "square.and.arrow.down")
                 }
                 .disabled(loadedJSONURL == nil)
+                
+                Button {
+                    saveJSON()
+                } label: {
+                    Label("Save As", systemImage: "square.and.arrow.down.on.square")
+                }
+
                 Button {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(jsonPreview, forType: .string)
+                    showCopyToastMessage()
                 } label: {
                     Label("Copy JSON", systemImage: "doc.on.doc")
                 }
@@ -773,6 +788,17 @@ struct JSONBuilderSheet: View {
             isUserExperienceExpanded = isExpanded
             isUserInterfaceExpanded = isExpanded
             isGeneratedJSONExpanded = isExpanded
+        }
+    }
+
+    private func showCopyToastMessage() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            showCopyToast = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showCopyToast = false
+            }
         }
     }
 

@@ -28,7 +28,7 @@ struct NudgeTestToolApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         Window("JSON Builder", id: "json-builder") {
-            JSONBuilderSheet(
+            JSONBuilder(
                 model: model,
                 loadFromSelection: $shouldLoadSelectionInBuilder
             )
