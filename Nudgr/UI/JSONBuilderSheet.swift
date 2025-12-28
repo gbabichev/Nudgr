@@ -431,7 +431,10 @@ struct JSONBuilderSheet: View {
                                             .textFieldStyle(.roundedBorder)
                                     }
 
-                                    FieldBlock("Action Button Path(s)") {
+                                    FieldBlock(
+                                        "Action Button Path(s)",
+                                        detail: "URI for custom actions (v1.1.6+). Avoid empty strings; using this disables built-in updateDevice logic."
+                                    ) {
                                         TextField("Action Button Path(s) (comma or line separated)", text: binding(for: requirement.id, keyPath: \.actionButtonPath))
                                             .textFieldStyle(.roundedBorder)
                                     }
@@ -508,119 +511,119 @@ struct JSONBuilderSheet: View {
                     DisclosureGroup("User Experience", isExpanded: $isUserExperienceExpanded) {
                         GroupBox {
                             VStack(alignment: .leading, spacing: 12) {
-                            SettingsRow("Allow Grace Periods") {
+                            SettingsRow("Allow Grace Periods", subtitle: "Extend requiredInstallationDate for new devices (v1.1.6+).") {
                                 Toggle("", isOn: trackedBoolBinding($allowGracePeriods, key: "allowGracePeriods", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
-                            SettingsRow("Allow Later Deferral Button") {
+                            SettingsRow("Allow Later Deferral Button", subtitle: "Enable Later button in custom deferrals UI (v1.1.10+).") {
                                 Toggle("", isOn: trackedBoolBinding($allowLaterDeferralButton, key: "allowLaterDeferralButton", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
-                            SettingsRow("Allow Movable Window") {
+                            SettingsRow("Allow Movable Window", subtitle: "Allow users to move the Nudge window (v2.0+).") {
                                 Toggle("", isOn: trackedBoolBinding($allowMovableWindow, key: "allowMovableWindow", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
-                            SettingsRow("Allow User Quit Deferrals") {
+                            SettingsRow("Allow User Quit Deferrals", subtitle: "Use deferRunUntil logic with LaunchAgent checks (v1.1.0+).") {
                                 Toggle("", isOn: trackedBoolBinding($allowUserQuitDeferrals, key: "allowUserQuitDeferrals", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
 
-                            FieldBlock("Allowed Deferrals") {
+                            FieldBlock("Allowed Deferrals", detail: "Deferrals before aggressive UX (v1.1.0+).") {
                                 TextField("1000000", text: $allowedDeferrals)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Allowed Deferrals Until Forced Secondary Quit") {
+                            FieldBlock("Allowed Deferrals Until Forced Secondary Quit", detail: "Deferrals before requiring both quit buttons (v1.1.0+).") {
                                 TextField("14", text: $allowedDeferralsUntilForcedSecondaryQuitButton)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Approaching Refresh Cycle (sec)") {
+                            FieldBlock("Approaching Refresh Cycle (sec)", detail: "UI refresh timer before approachingWindowTime (v1.1.0+).") {
                                 TextField("6000", text: $approachingRefreshCycle)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Approaching Window Time (hrs)") {
+                            FieldBlock("Approaching Window Time (hrs)", detail: "Hours before requiredInstallationDate is approaching (v1.1.0+).") {
                                 TextField("72", text: $approachingWindowTime)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Calendar Deferral Unit") {
+                            FieldBlock("Calendar Deferral Unit", detail: "Use approachingWindowTime or imminentWindowTime (v1.1.12+).") {
                                 TextField("approachingWindowTime or imminentWindowTime", text: $calendarDeferralUnit)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Elapsed Refresh Cycle (sec)") {
+                            FieldBlock("Elapsed Refresh Cycle (sec)", detail: "UI refresh timer after requiredInstallationDate expires (v1.1.0+).") {
                                 TextField("300", text: $elapsedRefreshCycle)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Grace Period Install Delay (hrs)") {
+                            FieldBlock("Grace Period Install Delay (hrs)", detail: "Extend requiredInstallationDate for new devices (v1.1.6+).") {
                                 TextField("23", text: $gracePeriodInstallDelay)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Grace Period Launch Delay (hrs)") {
+                            FieldBlock("Grace Period Launch Delay (hrs)", detail: "Bypass launch for new devices (v1.1.6+).") {
                                 TextField("1", text: $gracePeriodLaunchDelay)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Grace Period Path") {
+                            FieldBlock("Grace Period Path", detail: "File used to determine grace period start (v1.1.6+).") {
                                 TextField("/private/var/db/.AppleSetupDone", text: $gracePeriodPath)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Imminent Refresh Cycle (sec)") {
+                            FieldBlock("Imminent Refresh Cycle (sec)", detail: "UI refresh timer before imminentWindowTime (v1.1.0+).") {
                                 TextField("600", text: $imminentRefreshCycle)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Imminent Window Time (hrs)") {
+                            FieldBlock("Imminent Window Time (hrs)", detail: "Hours before requiredInstallationDate is imminent (v1.1.0+).") {
                                 TextField("24", text: $imminentWindowTime)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Initial Refresh Cycle (sec)") {
+                            FieldBlock("Initial Refresh Cycle (sec)", detail: "UI refresh timer before approachingWindowTime (v1.1.0+).") {
                                 TextField("18000", text: $initialRefreshCycle)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Launch Agent Identifier") {
+                            FieldBlock("Launch Agent Identifier", detail: "Only set if using a custom LaunchAgent ID (v1.1.13+).") {
                                 TextField("com.github.macadmins.Nudge", text: $launchAgentIdentifier)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            SettingsRow("Load Launch Agent") {
+                            SettingsRow("Load Launch Agent", subtitle: "Use SMAppService to load LaunchAgent (macOS 13+, experimental).") {
                                 Toggle("", isOn: trackedBoolBinding($loadLaunchAgent, key: "loadLaunchAgent", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
 
-                            FieldBlock("Max Random Delay (sec)") {
+                            FieldBlock("Max Random Delay (sec)", detail: "Max launch delay when randomDelay is true (v1.1.0+).") {
                                 TextField("1200", text: $maxRandomDelayInSeconds)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            SettingsRow("No Timers") {
+                            SettingsRow("No Timers", subtitle: "Disable userExperience timers (v1.1.0+).") {
                                 Toggle("", isOn: trackedBoolBinding($noTimers, key: "noTimers", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
 
-                            FieldBlock("Major Upgrade Launch Delay (days)") {
+                            FieldBlock("Major Upgrade Launch Delay (days)", detail: "Delay SOFA major upgrade nudges (v2.0+).") {
                                 TextField("0", text: $nudgeMajorUpgradeEventLaunchDelay)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Minor Update Launch Delay (days)") {
+                            FieldBlock("Minor Update Launch Delay (days)", detail: "Delay SOFA minor update nudges (v2.0+).") {
                                 TextField("0", text: $nudgeMinorUpdateEventLaunchDelay)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            FieldBlock("Nudge Refresh Cycle (sec)") {
+                            FieldBlock("Nudge Refresh Cycle (sec)", detail: "Core refresh timer; too low can be aggressive (v1.1.0+).") {
                                 TextField("60", text: $nudgeRefreshCycle)
                                     .textFieldStyle(.roundedBorder)
                             }
 
-                            SettingsRow("Random Delay") {
+                            SettingsRow("Random Delay", subtitle: "Enable initial delay before UI (v1.1.0+).") {
                                 Toggle("", isOn: trackedBoolBinding($randomDelay, key: "randomDelay", touched: $userExperienceTouched))
                                     .toggleStyle(.switch)
                             }
@@ -632,63 +635,103 @@ struct JSONBuilderSheet: View {
                     DisclosureGroup("User Interface", isExpanded: $isUserInterfaceExpanded) {
                         GroupBox {
                             VStack(alignment: .leading, spacing: 12) {
-                            TextField("Application Terminated Notification Image Path", text: $applicationTerminatedNotificationImagePath)
-                                .textFieldStyle(.roundedBorder)
+                            FieldBlock(
+                                "Application Terminated Notification Image Path",
+                                detail: "Local image path for the terminate notification (v2.0+)."
+                            ) {
+                                TextField("Application Terminated Notification Image Path", text: $applicationTerminatedNotificationImagePath)
+                                    .textFieldStyle(.roundedBorder)
+                            }
                             
-                            TextField("Fallback Language", text: trackedTextBinding($fallbackLanguage, key: "fallbackLanguage", touched: $userInterfaceTouched))
-                                .textFieldStyle(.roundedBorder)
+                            FieldBlock(
+                                "Fallback Language",
+                                detail: "Fallback locale if device language is not available (v1.1.0+)."
+                            ) {
+                                TextField("Fallback Language", text: trackedTextBinding($fallbackLanguage, key: "fallbackLanguage", touched: $userInterfaceTouched))
+                                    .textFieldStyle(.roundedBorder)
+                            }
                             
-                            SettingsRow("Force Fallback Language") {
+                            SettingsRow("Force Fallback Language", subtitle: "Force localizations to fallbackLanguage (v1.1.0+).") {
                                 Toggle("", isOn: trackedBoolBinding($forceFallbackLanguage, key: "forceFallbackLanguage", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
-                            SettingsRow("Force Screen Shot Icon") {
+                            SettingsRow("Force Screen Shot Icon", subtitle: "Render built-in ScreenShot icon if no image path (v1.1.0+).") {
                                 Toggle("", isOn: trackedBoolBinding($forceScreenShotIcon, key: "forceScreenShotIcon", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
                             
-                            TextField("Icon Dark Path", text: $iconDarkPath)
-                                .textFieldStyle(.roundedBorder)
+                            FieldBlock(
+                                "Icon Dark Path",
+                                detail: "Remote/local image for dark mode. Base64 allowed (v1.1.12+)."
+                            ) {
+                                TextField("Icon Dark Path", text: $iconDarkPath)
+                                    .textFieldStyle(.roundedBorder)
+                            }
                             
-                            TextField("Icon Light Path", text: $iconLightPath)
-                                .textFieldStyle(.roundedBorder)
+                            FieldBlock(
+                                "Icon Light Path",
+                                detail: "Remote/local image for light mode. Base64 allowed (v1.1.12+)."
+                            ) {
+                                TextField("Icon Light Path", text: $iconLightPath)
+                                    .textFieldStyle(.roundedBorder)
+                            }
                             
-                            TextField("Required Installation Display Format", text: $requiredInstallationDisplayFormat)
-                                .textFieldStyle(.roundedBorder)
+                            FieldBlock(
+                                "Required Installation Display Format",
+                                detail: "Custom format for showRequiredDate, e.g. MM/dd/yyyy (v2.0+)."
+                            ) {
+                                TextField("Required Installation Display Format", text: $requiredInstallationDisplayFormat)
+                                    .textFieldStyle(.roundedBorder)
+                            }
                             
-                            TextField("Screen Shot Dark Path", text: $screenShotDarkPath)
-                                .textFieldStyle(.roundedBorder)
+                            FieldBlock(
+                                "Screen Shot Dark Path",
+                                detail: "Remote/local screenshot for dark mode. Base64 allowed (v1.1.12+)."
+                            ) {
+                                TextField("Screen Shot Dark Path", text: $screenShotDarkPath)
+                                    .textFieldStyle(.roundedBorder)
+                            }
                             
-                            TextField("Screen Shot Light Path", text: $screenShotLightPath)
-                                .textFieldStyle(.roundedBorder)
+                            FieldBlock(
+                                "Screen Shot Light Path",
+                                detail: "Remote/local screenshot for light mode. Base64 allowed (v1.1.12+)."
+                            ) {
+                                TextField("Screen Shot Light Path", text: $screenShotLightPath)
+                                    .textFieldStyle(.roundedBorder)
+                            }
                             
-                            SettingsRow("Show Actively Exploited CVEs") {
+                            SettingsRow("Show Actively Exploited CVEs", subtitle: "Toggle CVEs list in sidebar (v2.0+).") {
                                 Toggle("", isOn: trackedBoolBinding($showActivelyExploitedCVEs, key: "showActivelyExploitedCVEs", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
-                            SettingsRow("Show Deferral Count") {
+                            SettingsRow("Show Deferral Count", subtitle: "Hide only the UI label; deferral logic still applies (v1.1.0+).") {
                                 Toggle("", isOn: trackedBoolBinding($showDeferralCount, key: "showDeferralCount", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
-                            SettingsRow("Show Days Remaining To Update", subtitle: "Disable to hide the Days Remaining To Update item in the UI.") {
+                            SettingsRow("Show Days Remaining To Update", subtitle: "Toggle Days Remaining item in UI (v2.0+).") {
                                 Toggle("", isOn: trackedBoolBinding($showDaysRemainingToUpdate, key: "showDaysRemainingToUpdate", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
-                            SettingsRow("Show Required Date") {
+                            SettingsRow("Show Required Date", subtitle: "Show requiredInstallationDate when enabled (v2.0+).") {
                                 Toggle("", isOn: trackedBoolBinding($showRequiredDate, key: "showRequiredDate", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
-                            SettingsRow("Simple Mode") {
+                            SettingsRow("Simple Mode", subtitle: "Enable simplified user experience (v1.1.0+).") {
                                 Toggle("", isOn: trackedBoolBinding($simpleMode, key: "simpleMode", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
-                            SettingsRow("Single Quit Button") {
+                            SettingsRow("Single Quit Button", subtitle: "Always show one quit button (v1.1.0+).") {
                                 Toggle("", isOn: trackedBoolBinding($singleQuitButton, key: "singleQuitButton", touched: $userInterfaceTouched))
                                     .toggleStyle(.switch)
                             }
                             
-                            TextField("Update Elements (raw JSON array)", text: $updateElements)
-                                .textFieldStyle(.roundedBorder)
+                            FieldBlock(
+                                "Update Elements (raw JSON array)",
+                                detail: "List of dictionaries for UI customization (v2.0+)."
+                            ) {
+                                TextField("Update Elements (raw JSON array)", text: $updateElements)
+                                    .textFieldStyle(.roundedBorder)
+                            }
                             }
                             .padding(.top, 4)
                         }

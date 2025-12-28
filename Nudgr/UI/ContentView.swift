@@ -393,7 +393,7 @@ struct ContentView: View {
                 Button {
                     isShowingFileImporter = true
                 } label: {
-                    Label("Select JSON", systemImage: "doc")
+                    Label("Select JSON", systemImage: "text.document")
                 }
                 .buttonStyle(.bordered)
             }
