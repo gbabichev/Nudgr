@@ -136,16 +136,6 @@ struct JSONBuilder: View {
                 Text("JSON Builder")
                     .font(.title3.weight(.semibold))
                 Spacer()
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title3)
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text("Close JSON Builder"))
             }
 
             Text("Build & modify Nudge JSON configurations")
