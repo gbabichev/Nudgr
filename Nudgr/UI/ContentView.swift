@@ -14,6 +14,9 @@ struct ContentView: View {
     @Binding var shouldLoadSelectionInBuilder: Bool
     @State private var isShowingInfo: Bool = false
     @Environment(\.openWindow) private var openWindow
+    private var showAggressiveNote: Bool {
+        model.parsedConfig?.optionalFeatures?.aggressiveUserExperience == true
+    }
     
     var body: some View {
         HStack(alignment: .top, spacing: 24) {
@@ -345,10 +348,15 @@ struct ContentView: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Latest Major \(latest.major) (\(latest.productVersion))")
                                         .font(.headline)
-                                    Text("Required Install By: \(latest.requiredInstallDate ?? "n/a")")
-                                        .foregroundStyle(latest.highlight ? .red : .primary)
                                     Text("Nudge Launches On: \(latest.nudgeLaunchDate ?? "n/a")")
                                         .foregroundStyle(latest.highlight ? .red : .primary)
+                                    Text("Required Install By: \(latest.requiredInstallDate ?? "n/a")")
+                                        .foregroundStyle(latest.highlight ? .red : .primary)
+                                    if showAggressiveNote {
+                                        Text("Aggressive user experience starts after this date/time.")
+                                            .foregroundStyle(.red)
+                                            .font(.footnote)
+                                    }
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
@@ -357,10 +365,15 @@ struct ContentView: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Previous Major \(previous.major) (\(previous.productVersion))")
                                         .font(.headline)
-                                    Text("Required Install By: \(previous.requiredInstallDate ?? "n/a")")
-                                        .foregroundStyle(previous.highlight ? .red : .primary)
                                     Text("Nudge Launches On: \(previous.nudgeLaunchDate ?? "n/a")")
                                         .foregroundStyle(previous.highlight ? .red : .primary)
+                                    Text("Required Install By: \(previous.requiredInstallDate ?? "n/a")")
+                                        .foregroundStyle(previous.highlight ? .red : .primary)
+                                    if showAggressiveNote {
+                                        Text("Aggressive user experience starts after this date/time.")
+                                            .foregroundStyle(.red)
+                                            .font(.footnote)
+                                    }
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
@@ -369,10 +382,15 @@ struct ContentView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Required Minimum OS: \(local.requiredMinimumOSVersion)")
                                 .font(.headline)
-                            Text("Required Install By: \(local.requiredInstallDate ?? "n/a")")
-                                .foregroundStyle(local.highlight ? .red : .primary)
                             Text("Nudge Launches On: \(local.nudgeLaunchDate ?? "n/a")")
                                 .foregroundStyle(local.highlight ? .red : .primary)
+                            Text("Required Install By: \(local.requiredInstallDate ?? "n/a")")
+                                .foregroundStyle(local.highlight ? .red : .primary)
+                            if showAggressiveNote {
+                                Text("Aggressive user experience starts after this date/time.")
+                                    .foregroundStyle(.red)
+                                    .font(.footnote)
+                            }
                         }
                     } else if !model.sofaError.isEmpty {
                         Text("SOFA error: \(model.sofaError)")
