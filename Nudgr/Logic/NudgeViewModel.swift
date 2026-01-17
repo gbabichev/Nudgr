@@ -473,14 +473,16 @@ class NudgeViewModel: ObservableObject {
     private func findNudgeBundle(in paths: [String], log: inout [String]) -> URL? {
         let fm = FileManager.default
         for path in paths {
-            var isDir: ObjCBool = false
-            if unsafe fm.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue {
+            let bundleURL = URL(fileURLWithPath: path, isDirectory: true)
+            if fm.fileExists(atPath: bundleURL.path),
+               (try? bundleURL.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true {
                 log.append("Found Nudge at \(path)")
-                return URL(fileURLWithPath: path, isDirectory: true)
+                return bundleURL
             }
             // Also scan directory contents in case of case differences.
             let dirURL = URL(fileURLWithPath: path).deletingLastPathComponent()
-            if unsafe fm.fileExists(atPath: dirURL.path, isDirectory: &isDir), isDir.boolValue {
+            if fm.fileExists(atPath: dirURL.path),
+               (try? dirURL.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true {
                 if let contents = try? fm.contentsOfDirectory(atPath: dirURL.path) {
                     if contents.contains(where: { $0.lowercased() == "nudge.app" }) {
                         log.append("Found Nudge in directory scan at \(dirURL.path)/Nudge.app")
@@ -510,9 +512,8 @@ class NudgeViewModel: ObservableObject {
 
     private func readVersion(from bundleURL: URL, log: inout [String]) -> String {
         let infoURL = bundleURL.appendingPathComponent("Contents/Info.plist")
-        if let data = try? Data(contentsOf: infoURL),
-           let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
-           let version = (plist["CFBundleShortVersionString"] as? String) ?? (plist["CFBundleVersion"] as? String) {
+        if let dict = NSDictionary(contentsOf: infoURL),
+           let version = (dict["CFBundleShortVersionString"] as? String) ?? (dict["CFBundleVersion"] as? String) {
             log.append("Version from Info.plist: \(version)")
             return version
         }
