@@ -25,13 +25,40 @@ struct SOFAOSVersion: Decodable {
     let osVersion: String
     let latest: SOFARelease?
     let securityReleases: [SOFARelease]?
-    let supportedModels: [String]?
+    let supportedModels: [SOFASupportedModel]?
 
     enum CodingKeys: String, CodingKey {
         case osVersion = "OSVersion"
         case latest = "Latest"
         case securityReleases = "SecurityReleases"
         case supportedModels = "SupportedModels"
+    }
+}
+
+struct SOFASupportedModel: Decodable {
+    let model: String
+    let url: String?
+    let identifiers: [String: String]?
+
+    enum CodingKeys: String, CodingKey {
+        case model = "Model"
+        case url = "URL"
+        case identifiers = "Identifiers"
+    }
+
+    init(from decoder: Decoder) throws {
+        let single = try decoder.singleValueContainer()
+        if let stringValue = try? single.decode(String.self) {
+            model = stringValue
+            url = nil
+            identifiers = nil
+            return
+        }
+
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        model = try container.decode(String.self, forKey: .model)
+        url = try container.decodeIfPresent(String.self, forKey: .url)
+        identifiers = try container.decodeIfPresent([String: String].self, forKey: .identifiers)
     }
 }
 
