@@ -422,7 +422,7 @@ struct ContentView: View {
                 Button {
                     isShowingInfo = true
                 } label: {
-                    if !model.nudgeInstalled {
+                    if !model.nudgeInstalled || model.isNudgeVersionMismatch {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.yellow)
                     } else {
@@ -430,7 +430,7 @@ struct ContentView: View {
                     }
                 }
                 .buttonStyle(.bordered)
-                .tint(model.nudgeInstalled ? .accentColor : .yellow)
+                .tint((!model.nudgeInstalled || model.isNudgeVersionMismatch) ? .yellow : .accentColor)
             }
             
             ToolbarItemGroup(placement: .primaryAction) {

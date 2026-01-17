@@ -39,6 +39,14 @@ class NudgeViewModel: ObservableObject {
         parsedConfig?.optionalFeatures?.utilizeSOFAFeed ?? true
     }
 
+    var isNudgeVersionMismatch: Bool {
+        guard nudgeInstalled else { return false }
+        let local = normalizedVersion(nudgeVersion)
+        let latest = normalizedVersion(latestNudgeVersion)
+        if local.isEmpty || latest.isEmpty { return false }
+        return local != latest
+    }
+
     func initializeDefaultsIfNeeded() {
         if nudgeInstalled {
             commandText = buildCommand(jsonPath: "<your_json_url_here>")
@@ -198,6 +206,17 @@ class NudgeViewModel: ObservableObject {
             parts.append(#"-simulate-os-version "\#(simulateOSVersion)""#)
         }
         return parts.joined(separator: " ")
+    }
+
+    private func normalizedVersion(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if trimmed.isEmpty || trimmed == "unknown" || trimmed == "unavailable" {
+            return ""
+        }
+        if trimmed.hasPrefix("v") {
+            return String(trimmed.dropFirst())
+        }
+        return trimmed
     }
 
     func rebuildCommandPreservingJSONURL(fallback: String = "<your_json_url_here>") {
@@ -490,15 +509,16 @@ class NudgeViewModel: ObservableObject {
     }
 
     private func readVersion(from bundleURL: URL, log: inout [String]) -> String {
+        let infoURL = bundleURL.appendingPathComponent("Contents/Info.plist")
+        if let data = try? Data(contentsOf: infoURL),
+           let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+           let version = (plist["CFBundleShortVersionString"] as? String) ?? (plist["CFBundleVersion"] as? String) {
+            log.append("Version from Info.plist: \(version)")
+            return version
+        }
         if let bundle = Bundle(url: bundleURL),
            let version = bundle.infoDictionary?["CFBundleShortVersionString"] as? String {
             log.append("Version from bundle: \(version)")
-            return version
-        }
-        let infoURL = bundleURL.appendingPathComponent("Contents/Info.plist")
-        if let dict = NSDictionary(contentsOf: infoURL),
-           let version = dict["CFBundleShortVersionString"] as? String {
-            log.append("Version from Info.plist: \(version)")
             return version
         }
         log.append("Could not read version from \(infoURL.path)")
