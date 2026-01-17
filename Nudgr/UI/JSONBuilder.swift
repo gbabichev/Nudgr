@@ -1149,11 +1149,11 @@ struct JSONBuilder: View {
         }
 
         let acceptableBundleIDs = parseList(acceptableApplicationBundleIDs)
-        if !isLoadedFromJSON || includeOptional("acceptableApplicationBundleIDs") || !acceptableBundleIDs.isEmpty {
+        if includeOptional("acceptableApplicationBundleIDs") || !acceptableBundleIDs.isEmpty {
             dict["acceptableApplicationBundleIDs"] = acceptableBundleIDs
         }
         let acceptableAssertionNames = parseList(acceptableAssertionApplicationNames)
-        if !isLoadedFromJSON || includeOptional("acceptableAssertionApplicationNames") || !acceptableAssertionNames.isEmpty {
+        if includeOptional("acceptableAssertionApplicationNames") || !acceptableAssertionNames.isEmpty {
             dict["acceptableAssertionApplicationNames"] = acceptableAssertionNames
         }
         if !isLoadedFromJSON || includeOptional("acceptableAssertionUsage") {
