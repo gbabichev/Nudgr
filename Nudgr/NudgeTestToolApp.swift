@@ -23,7 +23,7 @@ struct NudgeTestToolApp: App {
                 shouldLoadSelectionInBuilder: $shouldLoadSelectionInBuilder
             )
                 .sheet(isPresented: $isAboutPresented) {
-                    AboutOverlay(isPresented: $isAboutPresented)
+                    AboutView()
                 }
         }
         .windowStyle(.hiddenTitleBar)
