@@ -14,10 +14,10 @@
 
 </div>
 
-<!-- <p align="center">
+<p align="center">
     <a href="Documentation/App1.png"><img src="Documentation/App1.png" width="30%"></a>
     <a href="Documentation/App2.png"><img src="Documentation/App2.png" width="30%"></a>
-</p> -->
+</p>
 
 ## What it does
 
@@ -29,6 +29,7 @@
 - Launches the Nudge command and can kill the Nudge process.
 - Includes utilities to install or uninstall Nudge by pulling the latest release from GitHub.
 - Provides quick shortcuts to generate commands for logging Nudge actions.
+- Provides a JSON Builder.
 
 ## Typical workflow
 
@@ -41,6 +42,29 @@
 
 - Nudgr is **not** a JSON / MDM payload validator. It's simply a viewer, that lets you easily test & simulate different scenarios without having to remember all the command line shortcuts. 
 
-## Notes
+## 🖥️ Install & Minimum Requirements
 
-- SOFA data may be served from the system HTTP cache when offline; the UI shows a warning if a cached response is used.
+- macOS 15.0 or later  
+- Apple Silicon & Intel (not tested on Intel)
+- ~10 MB free disk space  
+
+### ⚙️ Installation
+
+Download from Releases. It's signed & notarized.
+
+### ⚙️ Build it yourself!
+
+Clone the repo and build with Xcode:
+
+```bash
+git clone https://github.com/gbabichev/Nudgr.git
+```
+
+## 📝 Changelog
+
+### 1.0.0
+- Initial release
+
+## 📄 License
+
+MIT — free for personal and commercial use. 
